@@ -47,6 +47,8 @@
 #include "ports.h"
 
 // logic
+// gibbons TODO: need rtc.h here?
+#include "rtc.h"
 #include "date.h"
 #include "user.h"
 #include "clock.h"
@@ -86,10 +88,23 @@ struct date sDate;
 // *************************************************************************************************
 void reset_date(void)
 {
+	RTCCTL01 |= RTCHOLD; // Stop the RTC
+	
 	// Set date 
-	sDate.year  = 2009;
-	sDate.month = 8;
+	sDate.year  = 2011;
+	sDate.month = 1;
 	sDate.day 	= 1;
+	sDate.dayofweek = 6; // Jan 1, 2011 was a Saturday
+	
+	//RTCYEAR_H = (2011u & 0xFF00) >> 8;	//Upper byte of year
+	//RTCYEAR_L = 2011u & 0x00FF;		//Lower byte of year
+	RTCYEAR = 2011u; //gibbons TODO: does this work?
+	RTCMON = 1u;
+	RTCDAY = 1u;
+	RTCDOW = 6u; // Jan 1, 2011 was a Saturday
+	//gibbons: Need unsigned ("u") designators after these?
+	
+	RTCCTL01 &= ~RTCHOLD; // Start the RTC
 	
 	// Show default display
 	sDate.view = 0;
@@ -124,14 +139,68 @@ u8 get_numberOfDays(u8 month, u16 year)
 	  // 2. Exception to rule 1: a year that is divisible by 100 is not a leap year. (Y % 100) != 0
 	  // 3. Exception to rule 2: a year that is divisible by 400 is a leap year. (Y % 400) == 0 
    
-      case 2: 	if ((year%4==0) && ((year%100!=0) || (year%400==0)))	
+      case 2:	/*if ((year%4==0) && ((year%100!=0) || (year%400==0)))	
       				return (29);
 				else
-					return (28);
+					return (28);*/
+	//gibbons: Since the RTC module only supports (leap-year-wise) the years 2001-2099, there's no reason
+	//	for the above added complexity
+		if (year % 4 == 0) return (29); else return (28);
 				
       default: 	return (0);
    }
 }
+
+
+// *************************************************************************************************
+// @fn          Calculate_DOW
+// @brief       Calculate the day of the week using the current date
+// @param       none
+// @return      Day of week (0=Sun, 1=Mon, ..., 6=Sat)
+// *************************************************************************************************
+#ifdef CONFIG_DAY_OF_WEEK
+u8 Calculate_DOW()
+{
+    //pfs BEGIN replace year display with day of week
+    //pfs algorith from http://klausler.com/new-dayofweek.html
+    #define BASE_YEAR 2001 // not a leap year, so no need to add 1
+    u8 skew;
+    skew = (sDate.year - BASE_YEAR) + (sDate.year - BASE_YEAR)/4; // compute number of leap years since BASE_YEAR
+    if ((29 == get_numberOfDays(2, sDate.year)) && (sDate.month < 3))
+	skew--; // if this is a leap year but before February 29
+    skew = (skew + sDate.day); // add day of current month
+    //add this month's skew value
+    switch(sDate.month) {
+	case 5:
+	    skew += 1;
+	    break;
+	case 8:
+	    skew += 2;
+	    break;
+	case 2:
+	case 3:
+	case 11:
+	    skew += 3;
+	    break;
+	case 6:
+	    skew += 4;
+	    break;
+	case 9:
+	case 12:
+	    skew += 5;
+	    break;
+	case 4:
+	case 7:
+	    skew += 6;
+	    break;
+	default:  //January and October
+	    break;
+    }
+    skew %= 7;
+    
+    return skew;
+}
+#endif
 
 
 // *************************************************************************************************
@@ -143,7 +212,7 @@ u8 get_numberOfDays(u8 month, u16 year)
 void add_day(void)
 {
 	// Add 1 day
-	sDate.day++;	
+	/*sDate.day++;	//gibbons TODO: remove code?
 	
 	// Check if day overflows into next month
 	if (sDate.day > get_numberOfDays(sDate.month, sDate.year))
@@ -160,7 +229,17 @@ void add_day(void)
 			sDate.month = 1;	
 			sDate.year++;
 		}	
+	}*/
+	
+	sDate.day = RTCDAY;
+	sDate.dayofweek = RTCDOW;
+	if (sDate.day == 1) { // New month
+	    sDate.month = RTCMON;
+	    if (sDate.month == 1) { // New year
+		sDate.year = RTCYEAR; //(RTCYEAR_H << 8) | RTCYEAR_L; //gibbons TODO: does this work?
+	    }
 	}
+	
 	// Indicate to display function that new value is available
 	display.flag.update_date = 1;
 }
@@ -215,9 +294,24 @@ void mx_date(line_t line)
 		if (button.flag.star) 
 		{
 			// Copy local variables to global variables
+			RTCCTL01 |= RTCHOLD; // Stop RTC
+			
 			sDate.day = day;
 			sDate.month = month;
 			sDate.year = year;
+			RTCDAY = day;
+			RTCMON = month;
+			//RTCYEAR_L = year & 0x00FF; // Low byte of year
+			//RTCYEAR_H = (year & 0xFF00) >> 8; // High byte of year
+			RTCYEAR = year; //gibbons TODO: does this work?
+			
+			#ifdef CONFIG_DAY_OF_WEEK
+			sDate.dayofweek = Calculate_DOW();
+			RTCDOW = sDate.dayofweek;
+			#endif
+			
+			RTCCTL01 &= ~RTCHOLD; // Start RTC
+			
 			#ifdef CONFIG_SIDEREAL
 			if(sSidereal_time.sync>0)
 				sync_sidereal();
@@ -292,43 +386,7 @@ void display_date(line_t line, update_t update)
 				str = itoa(sDate.day, 2, 1);
 				display_chars(switch_seg(line, LCD_SEG_L1_1_0, LCD_SEG_L2_1_0), str, SEG_ON);
 
-				//pfs BEGIN replace year display with day of week
-				//pfs algorith from http://klausler.com/new-dayofweek.html
-				#define BASE_YEAR 2001 // not a leap year, so no need to add 1
-				u8 skew;
-				skew = (sDate.year - BASE_YEAR)+(sDate.year - BASE_YEAR)/4; // compute number of leap years since BASE_YEAR
-				if ((29 == get_numberOfDays(2, sDate.year)) && (sDate.month < 3))
-				  skew--; // if this is a leap year but before February 29
-				skew = (skew + sDate.day); // add day of current month
-				//add this month's skew value
-				switch(sDate.month) {
-				  case 5:
-					skew += 1;
-					break;
-				  case 8:
-					skew += 2;
-					break;
-				  case 2:
-				  case 3:
-				  case 11:
-					skew += 3;
-					break;
-				  case 6:
-					skew += 4;
-					break;
-				  case 9:
-				  case 12:
-					skew += 5;
-					break;
-				  case 4:
-				  case 7:
-					skew += 6;
-					break;
-				  default:  //January and October
-					break;
-				}
-				skew = skew%7;
-				str = (u8 *)weekDayStr[skew];
+				str = (u8 *)weekDayStr[sDate.dayofweek];
 				display_chars(switch_seg(line, LCD_SEG_L1_3_2, LCD_SEG_L2_4_2), str, SEG_ON);
 				display_symbol(switch_seg(line, LCD_SEG_L1_DP1, LCD_SEG_L2_DP), SEG_ON);
 				break;

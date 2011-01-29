@@ -49,6 +49,7 @@
 #include "ports.h"
 
 // logic
+#include "rtc.h"
 #include "alarm.h"
 #include "clock.h"
 #include "user.h"
@@ -80,9 +81,13 @@ struct alarm sAlarm;
 void reset_alarm(void) 
 {
 	// Default alarm time 06:30
-	sAlarm.hour   = 06;
+	sAlarm.hour   = 6; //Was "06" --> means "6" in octal; same effect, but not what was intended
 	sAlarm.minute = 30;
 
+	RTCCTL01 &= ~RTCAIE & ~RTCAIFG ; //Disable RTC alarm interrupt and clear the interrupt flag
+	RTCAHOUR = 6;	//Set alarm hour to default, clear Hour RTC_AE bit
+	RTCAMIN = 30;	//Set alarm min to default, clear Min RTC_AE bit
+	
 	// Alarm is initially off	
 	sAlarm.duration = ALARM_ON_DURATION;
 	sAlarm.state 	= ALARM_DISABLED;
@@ -143,6 +148,11 @@ void sx_alarm(u8 line)
 		// Toggle alarm state
 		if (sAlarm.state == ALARM_DISABLED)		
 		{
+			// Enable alarm in the RTC module
+			RTCAHOUR |= RTC_AE; //Alarm Enable bit
+			RTCAMIN |= RTC_AE;
+			RTCCTL01 |= RTCAIE; //Enable alarm interrupt
+			
 			sAlarm.state = ALARM_ENABLED;
 			
 			// Show "  on" message 
@@ -151,6 +161,11 @@ void sx_alarm(u8 line)
 		}
 		else if (sAlarm.state == ALARM_ENABLED)	
 		{
+			// Disable alarm in the RTC module
+			RTCCTL01 &= ~RTCAIE & ~RTCAIFG; //Disable alarm interrupt, clear interrupt flag
+			RTCAHOUR &= ~RTC_AE; //Clear Enable Alarm bit
+			RTCAMIN &= ~RTC_AE;
+			
 			sAlarm.state = ALARM_DISABLED;
 
 			// Show "  off" message 
@@ -207,6 +222,19 @@ void mx_alarm(u8 line)
 	    // Store local variables in global alarm time
 	    sAlarm.hour = hours;
 	    sAlarm.minute = minutes;
+	    
+	    // Store alarm values in RTC module's registers
+	    if (sAlarm.state == ALARM_DISABLED) { //Alarm disabled
+	      RTCAHOUR = hours; //Alarm Enable bit not set
+	      RTCAMIN = minutes;
+	    }
+	    else { //Alarm enabled, disable before changing alarm time
+	      RTCCTL01 &= ~RTCAIE & ~RTCAIFG;
+	      RTCAHOUR = RTC_AE | hours; //AE = Alarm Enable bit
+	      RTCAMIN = RTC_AE | minutes;
+	      RTCCTL01 |= RTCAIE; //Re-enable alarm
+	    }
+	    
 	    // Set display update flag
 	    display.flag.line1_full_update = 1;
 	    break;

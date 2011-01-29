@@ -55,6 +55,7 @@
 #include "rf1a.h"
 
 // logic
+#include "rtc.h"
 #include "menu.h"
 #include "date.h"
 #include "alarm.h"
@@ -276,6 +277,15 @@ void init_application(void)
 	// Re-enable all interrupts
 	__enable_interrupt();
 	
+	// Setup RTC Module
+	RTCCTL01 = RTCHOLD | RTCMODE | RTCRDYIE;	// Real-time clock (calendar mode) with hex registers,
+							// Event Mode = minute changed (not enabled)
+							// Enable (1-sec) RTC read ready interrupt
+	RTCCTL23 = 0; // RTC frequency calibration/adjustment, frequency output setup (on external pin)
+	RTCPS0CTL = 0; // Setup for Prescale timer 0 interrupt
+	RTCPS1CTL = 0; // Setup for Prescale timer 1 interrupt
+	
+	
 	// ---------------------------------------------------------------------
 	// Configure ports
 
@@ -401,7 +411,7 @@ void init_global_variables(void)
 	#endif
 
 #ifdef CONFIG_EGGTIMER
-	//Set Eggtimer to a 5 minute default
+	//Set Eggtimer to a 1 minute default
 	memcpy(seggtimer.defaultTime, "00010000", sizeof(seggtimer.time));
 	reset_eggtimer();
 #endif

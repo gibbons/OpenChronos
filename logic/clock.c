@@ -48,6 +48,8 @@
 #include "timer.h"
 
 // logic
+// gibbons TODO: rtc.h necessary?
+#include "rtc.h"
 #include "menu.h"
 #include "clock.h"
 #include "user.h"
@@ -98,7 +100,7 @@ const u8 selection_Timeformat[][4] =
 
 // *************************************************************************************************
 // @fn          reset_clock
-// @brief       Resets clock time to 00:00:00, 24H time format.
+// @brief       Resets clock time to 04:30:00, 24H time format.
 // @param       none
 // @return      none
 // *************************************************************************************************
@@ -106,12 +108,20 @@ void reset_clock(void)
 {
 	// Set global system time to 0
 	sTime.system_time = 0;
+	RTCCTL01 |= RTCHOLD; // Stop the RTC
 
 	// Set main 24H time to start value
 	sTime.hour   = 4;
 	sTime.minute = 30;
 	sTime.second = 0;
 
+	// Set RTC module time to start value
+	RTCHOUR = 4u;
+	RTCMIN = 30u;
+	RTCSEC = 0u; //gibbons TODO: need unsigned ("u") designator after these numbers?
+	
+	RTCCTL01 &= ~RTCHOLD; // Start the RTC
+	
 	// Display style of both lines is default (HH:MM)
 	sTime.line1ViewStyle = DISPLAY_DEFAULT_VIEW;
 	sTime.line2ViewStyle = DISPLAY_DEFAULT_VIEW;
@@ -139,11 +149,29 @@ void clock_tick(void)
 	// sTime.drawFlag = 3: hour, minute
 	sTime.drawFlag = 1;
 
+	// Update saved (global) time, update drawFlag appropriately
+	sTime.second = RTCSEC;
+	
+	if (sTime.second == 0) { // New minute
+	  sTime.drawFlag++;
+	  sTime.minute = RTCMIN;
+	  
+	  if (sTime.minute == 0) { // New hour
+	    sTime.drawFlag++;
+	    sTime.hour = RTCHOUR;
+	    
+	    if (sTime.hour == 0) { // New day
+	      add_day();
+	    }
+	  }
+	}
+	
+	
 	// Increase global system time
 	sTime.system_time++;
 
 	// Add 1 second
-	sTime.second++;
+	/*sTime.second++;
 
 	// Add 1 minute
 	if (sTime.second == 60)
@@ -166,7 +194,7 @@ void clock_tick(void)
 				add_day();
 			}
 		}
-	}
+	}*/
 }
 
 
@@ -284,14 +312,21 @@ void mx_time(u8 line)
     {
       // Stop clock timer
       Timer0_Stop();
+      RTCCTL01 |= RTCHOLD;
 
       // Store local variables in global clock time
       sTime.hour 	 = hours;
       sTime.minute = minutes;
       sTime.second = seconds;
+      
+      // Set RTC module time
+      RTCHOUR = hours;
+      RTCMIN = minutes;
+      RTCSEC = seconds;
 
       // Start clock timer
       Timer0_Start();
+      RTCCTL01 &= ~RTCHOLD;
 
       // Full display update is done when returning from function
       display_symbol(LCD_SYMB_AM, SEG_OFF);

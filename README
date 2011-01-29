@@ -1,54 +1,47 @@
 
-This fork adds a variometer, an instrument indicating vertical speed,
-essentially for use in free flight (paragliding, hang gliding, ...).
+Fork to make use of the Real Time Clock (RTC) module for timekeeping.
 
-Initially based on the vario source coded by dkm, I ended up rewriting
-that module completely.
+This fork ports all of the time-keeping and alarm responsibilities over to the RTC module.
+Previously, a 1-second interrupt from Timer A with time-keeping logic had been used.
 
-- Pressing the "v" (down) button cycles between displays as follows:
-        
-    * vario (in m/s)
-	  Displays a signed fractional value representing the ascent or
-          descent speed in meters per second.
+Ideally, these changes should be transparent to the rest of the code. The current date and
+time are managed by the RTC in its own registers, though a copy is updated each second in
+the sTime and sDate structures for use by all other code. As nice as it would be to just
+use the RTC module's registers for everything, reads to these registers can only be done
+reliably when the register isn't transitioning, indicated by the RTCRDRDY bit. Rather than
+test this bit every time and wait for it to be set before every read access to the current
+time and/or date, it's simply easier to just update sTime (and sDate, as necessary) once a
+second using the RTC module's 1-second interrupt.
 
-    * vario (in Pascal)
-          Displays a signed integer value representing the ascent or
-          descent speed in Pascal/second.
+If you are working with TI's header files, be careful about the definitions for the RTC
+module's control registers! The bits for various options (e.g. RTCMODE) are often meant to
+be used on the full 16-bit register (e.g. RTCCTL01), not on single byte registers (e.g. 
+RTCCTL1). This created some odd problems for me!
 
-    * pressure (in hPa)
-          Displays a signed fraction representing the pressure measured at
-          the current altitude.
-
-    * max Vz (in m/s)
-          Displays the maximum vertical speed in meters/second.
-
-    * min Vz (in m/s)
-          Displays the minimum vertical speed in meters/second.
-    
-- A long press on the "#" button performs a context sensitive function:
-    
-    * during vario display, changes the vario sound mode:
-      Off      (default, no symbol displayed)
-      Ascent 0 (start beeping at 0.0m/s, beeper1 and beeper2 symbols
-               displayed)
-      Ascent 1 (start beeping at 0.1m/s, beeper1 symbol displayed)
-      Both     (beep for up or down, beeper1 and beeper2 symbols
-               displayed)
-
-      Tone frequency, number and duration of beeps depend on climb rate.
-
-    * during max/min Vz display, resets both the max and min values.
-    
-- The "record" icon is flashed at one second intervals, indicating that
-  the watch is in vario mode and receiving pressure measurements.
-          
-  Note that the upper line must be in altimeter mode for the vario to
-  work, as it relies on updates from the altimeter. If the altimeter
-  is not active, the vario display shows "noAlt".
 
 == Status ==
 
-Works, but in development :-)
+Very much a work-in-progress! Though it appears to keep time (over the course of about 45
+minutes), I can't make any guarantees.
+
+
+== Todo ==
+
+  * Test alarm functionality
+
+  * Verify changes haven't disrupted other time-related code (sidereal clock, stopwatch,
+    eggtimer, etc.)
+
+  * Verify hour, day, day of week, month, and year transistions work correctly
+
+  * Update logic/rfsimpliciti.c to set time in RTC module registers when wirelessly syncing
+
+  * Re-arrange use of Timer A, now that TIMER0_A0 interrupt is unused
+
+  * Update and/or verify IAR project file (probably just need to add "rtc.c" and "rtc.h"
+    references somewhere)
+
+  * Add in optional hour or noon/midnight beep functionality via RTCTEV interrupt
 
 == Requirements ==
 

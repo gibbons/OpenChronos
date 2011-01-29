@@ -33,42 +33,10 @@
 //
 // *************************************************************************************************
 
-#ifndef DATE_H_
-#define DATE_H_
+#ifndef RTC_H_
+#define RTC_H_
 
+//Alarm enable bit for RTC alarm registers (8th bit)
+#define RTC_AE	(0x80)
 
-// *************************************************************************************************
-// Include section
-
-
-// *************************************************************************************************
-// Prototypes section
-extern void reset_date(void);
-extern void add_day(void);
-extern void mx_date(u8 line);
-extern void sx_date(u8 line);
-extern void display_date(u8 line, u8 update);
-
-
-// *************************************************************************************************
-// Defines section
-
-
-// *************************************************************************************************
-// Global Variable section
-struct date
-{
-	u8  view;
-	u8  day;
-	u8  month;
-	u16 year;
-	u8  dayofweek;
-};
-extern struct date sDate;
-
-
-// *************************************************************************************************
-// Extern section
-
-
-#endif /*DATE_H_*/
+#endif
