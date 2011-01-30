@@ -45,10 +45,9 @@
 // driver
 #include "display.h"
 #include "ports.h"
+#include "rtc.h"
 
 // logic
-// gibbons TODO: need rtc.h here?
-#include "rtc.h"
 #include "date.h"
 #include "user.h"
 #include "clock.h"
@@ -61,6 +60,9 @@
 // Prototypes section
 void reset_date(void);
 u8 get_numberOfDays(u8 month, u16 year);
+#ifdef CONFIG_DAY_OF_WEEK
+u8 Calculate_DOW(void);
+#endif
 void add_day(void);
 void mx_date(line_t line);
 void sx_date(line_t line);
@@ -88,23 +90,7 @@ struct date sDate;
 // *************************************************************************************************
 void reset_date(void)
 {
-	RTCCTL01 |= RTCHOLD; // Stop the RTC
-	
-	// Set date 
-	sDate.year  = 2011;
-	sDate.month = 1;
-	sDate.day 	= 1;
-	sDate.dayofweek = 6; // Jan 1, 2011 was a Saturday
-	
-	//RTCYEAR_H = (2011u & 0xFF00) >> 8;	//Upper byte of year
-	//RTCYEAR_L = 2011u & 0x00FF;		//Lower byte of year
-	RTCYEAR = 2011u; //gibbons TODO: does this work?
-	RTCMON = 1u;
-	RTCDAY = 1u;
-	RTCDOW = 6u; // Jan 1, 2011 was a Saturday
-	//gibbons: Need unsigned ("u") designators after these?
-	
-	RTCCTL01 &= ~RTCHOLD; // Start the RTC
+	rtc_set_date(2011, 1, 1); // Set date to default: January 1st, 2011
 	
 	// Show default display
 	sDate.view = 0;
@@ -154,7 +140,7 @@ u8 get_numberOfDays(u8 month, u16 year)
 
 // *************************************************************************************************
 // @fn          Calculate_DOW
-// @brief       Calculate the day of the week using the current date
+// @brief       Calculate the day of the week using the current date in sDate
 // @param       none
 // @return      Day of week (0=Sun, 1=Mon, ..., 6=Sat)
 // *************************************************************************************************
@@ -294,23 +280,7 @@ void mx_date(line_t line)
 		if (button.flag.star) 
 		{
 			// Copy local variables to global variables
-			RTCCTL01 |= RTCHOLD; // Stop RTC
-			
-			sDate.day = day;
-			sDate.month = month;
-			sDate.year = year;
-			RTCDAY = day;
-			RTCMON = month;
-			//RTCYEAR_L = year & 0x00FF; // Low byte of year
-			//RTCYEAR_H = (year & 0xFF00) >> 8; // High byte of year
-			RTCYEAR = year; //gibbons TODO: does this work?
-			
-			#ifdef CONFIG_DAY_OF_WEEK
-			sDate.dayofweek = Calculate_DOW();
-			RTCDOW = sDate.dayofweek;
-			#endif
-			
-			RTCCTL01 &= ~RTCHOLD; // Start RTC
+			rtc_set_date(year, month, day);
 			
 			#ifdef CONFIG_SIDEREAL
 			if(sSidereal_time.sync>0)

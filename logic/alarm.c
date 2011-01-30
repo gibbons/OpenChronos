@@ -47,9 +47,9 @@
 #include "display.h"
 #include "buzzer.h"
 #include "ports.h"
+#include "rtc.h"
 
 // logic
-#include "rtc.h"
 #include "alarm.h"
 #include "clock.h"
 #include "user.h"
@@ -80,19 +80,34 @@ struct alarm sAlarm;
 // *************************************************************************************************
 void reset_alarm(void) 
 {
-	// Default alarm time 06:30
-	sAlarm.hour   = 6; //Was "06" --> means "6" in octal; same effect, but not what was intended
-	sAlarm.minute = 30;
-
-	RTCCTL01 &= ~RTCAIE & ~RTCAIFG ; //Disable RTC alarm interrupt and clear the interrupt flag
-	RTCAHOUR = 6;	//Set alarm hour to default, clear Hour RTC_AE bit
-	RTCAMIN = 30;	//Set alarm min to default, clear Min RTC_AE bit
-	
 	// Alarm is initially off	
 	sAlarm.duration = ALARM_ON_DURATION;
 	sAlarm.state 	= ALARM_DISABLED;
+  
+	// Default alarm time 06:30
+	set_alarm_time(6, 30);
+	
+	// Clear unused RTC module alarm registers, just to be safe
+	RTCADAY = 0;
+	RTCADOW = 0;
 }
 
+
+void set_alarm_time(u8 hour, u8 minute)
+{
+    RTCCTL01 &= ~RTCAIE & ~RTCAIFG; // Disable RTC module alarm before making any changes, just to be safe
+    
+    sAlarm.hour = hour;
+    sAlarm.minute = minute;
+    
+    // Now store the alarm time in the RTC module's registers
+    RTCAHOUR = hour | RTC_AE;
+    RTCAMIN = minute | RTC_AE;
+    
+    if (sAlarm.state != ALARM_DISABLED) {
+      RTCCTL01 |= RTCAIE; //Re-enable RTC module alarm
+    }    
+}
 
 // *************************************************************************************************
 // @fn          check_alarm
@@ -100,7 +115,7 @@ void reset_alarm(void)
 // @param       none
 // @return      none
 // *************************************************************************************************
-void check_alarm(void) 
+/*void check_alarm(void) // gibbons TODO: remove
 {
 	// Return if alarm is not enabled
 	if (sAlarm.state != ALARM_ENABLED) return;
@@ -115,7 +130,7 @@ void check_alarm(void)
 			sAlarm.state = ALARM_ON;
 		}
 	}
-}	
+}*/
 
 
 // *************************************************************************************************
@@ -148,10 +163,7 @@ void sx_alarm(u8 line)
 		// Toggle alarm state
 		if (sAlarm.state == ALARM_DISABLED)		
 		{
-			// Enable alarm in the RTC module
-			RTCAHOUR |= RTC_AE; //Alarm Enable bit
-			RTCAMIN |= RTC_AE;
-			RTCCTL01 |= RTCAIE; //Enable alarm interrupt
+			RTCCTL01 |= RTCAIE; //Enable alarm interrupt for RTC module
 			
 			sAlarm.state = ALARM_ENABLED;
 			
@@ -163,8 +175,6 @@ void sx_alarm(u8 line)
 		{
 			// Disable alarm in the RTC module
 			RTCCTL01 &= ~RTCAIE & ~RTCAIFG; //Disable alarm interrupt, clear interrupt flag
-			RTCAHOUR &= ~RTC_AE; //Clear Enable Alarm bit
-			RTCAMIN &= ~RTC_AE;
 			
 			sAlarm.state = ALARM_DISABLED;
 
@@ -220,18 +230,9 @@ void mx_alarm(u8 line)
 	  if (button.flag.star)
 	  {
 	    // Store local variables in global alarm time
-	    sAlarm.hour = hours;
-	    sAlarm.minute = minutes;
-	    
-	    // Store alarm values in RTC module's registers
-	    if (sAlarm.state == ALARM_DISABLED) { //Alarm disabled
-	      RTCAHOUR = hours; //Alarm Enable bit not set
-	      RTCAMIN = minutes;
-	    }
-	    else { //Alarm enabled, disable before changing alarm time
-	      RTCCTL01 &= ~RTCAIE & ~RTCAIFG;
-	      RTCAHOUR = RTC_AE | hours; //AE = Alarm Enable bit
-	      RTCAMIN = RTC_AE | minutes;
+	    RTCCTL01 &= ~RTCAIE & ~RTCAIFG; // Disable RTC module alarm before making any changes
+	    set_alarm_time(hours, minutes);
+	    if (sAlarm.state != ALARM_DISABLED) { // Re-enable RTC module alarm
 	      RTCCTL01 |= RTCAIE; //Re-enable alarm
 	    }
 	    

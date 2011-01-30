@@ -39,4 +39,9 @@
 //Alarm enable bit for RTC alarm registers (8th bit)
 #define RTC_AE	(0x80)
 
+
+// Prototypes Section
+void rtc_set_time(u8 hour, u8 minute, u8 second);
+void rtc_set_date(u16 year, u8 month, u8 day);
+
 #endif

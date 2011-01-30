@@ -48,6 +48,7 @@
 #ifdef FEATURE_PROVIDE_ACCEL
 #include "vti_as.h"
 #endif
+#include "rtc.h"
 #include "ports.h"
 #include "timer.h"
 #include "radio.h"
@@ -564,6 +565,7 @@ WDTCTL = WDTPW + WDTHOLD;
 		display.flag.update_time = 0;
 
 		// Service watchdog
+		// TODO: Does the next line need a preprocessor conditional for watchdog timer use?
 		WDTCTL = WDTPW + WDTIS__512K + WDTSSEL__ACLK + WDTCNTCL;
 	}
 }
@@ -695,15 +697,18 @@ void simpliciti_sync_decode_ap_cmd_callback(void)
 
 		case SYNC_AP_CMD_SET_WATCH:		// Set watch parameters
 										sys.flag.use_metric_units = (simpliciti_data[1] >> 7) & 0x01;
-										sTime.hour 			= simpliciti_data[1] & 0x7F;
-										sTime.minute 		= simpliciti_data[2];
-										sTime.second 		= simpliciti_data[3];
-										sDate.year 			= (simpliciti_data[4]<<8) + simpliciti_data[5];
-										sDate.month 		= simpliciti_data[6];
-										sDate.day 			= simpliciti_data[7];
+										rtc_set_time(simpliciti_data[1] & 0x7F, simpliciti_data[2], simpliciti_data[3]);
+										//sTime.hour 			= simpliciti_data[1] & 0x7F;
+										//sTime.minute 		= simpliciti_data[2];
+										//sTime.second 		= simpliciti_data[3];
+										rtc_set_date((simpliciti_data[4]<<8) + simpliciti_data[5], simpliciti_data[6], simpliciti_data[7]);
+										//sDate.year 			= (simpliciti_data[4]<<8) + simpliciti_data[5];
+										//sDate.month 		= simpliciti_data[6];
+										//sDate.day 			= simpliciti_data[7];
 										#ifdef CONFIG_ALARM
-										sAlarm.hour			= simpliciti_data[8];
-										sAlarm.minute		= simpliciti_data[9];
+										set_alarm_time(simpliciti_data[8], simpliciti_data[9]);
+										//sAlarm.hour			= simpliciti_data[8];
+										//sAlarm.minute		= simpliciti_data[9];
 										#endif
 										// Set temperature and temperature offset
 										t1 = (s16)((simpliciti_data[10]<<8) + simpliciti_data[11]);

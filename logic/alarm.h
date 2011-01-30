@@ -43,7 +43,8 @@
 
 // internal functions
 extern void reset_alarm(void);
-extern void check_alarm(void);
+//extern void check_alarm(void); // gibbons TODO: remove
+extern void set_alarm_time(u8 hour, u8 minute);
 extern void stop_alarm(void);
 
 // menu functions

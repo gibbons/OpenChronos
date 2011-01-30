@@ -53,6 +53,7 @@
 
 // logic
 #include "clock.h"
+#include "date.h"
 #include "battery.h"
 #include "stopwatch.h"
 #include "alarm.h"
@@ -95,9 +96,9 @@
 // Prototypes section
 //gibbons TODO: update prototypes
 
-//void Timer0_Init(void);
-//void (*fptr_Timer0_A3_function)(void);
- 
+void rtc_set_time(u8 hour, u8 minute, u8 second);
+void rtc_set_date(u16 year, u8 month, u8 day);
+
 
 // *************************************************************************************************
 // Defines section
@@ -115,17 +116,59 @@
 //extern void to_lpm(void);
 
 
+
+
 //gibbons TODO: update documentation
+void rtc_set_time(u8 hour, u8 minute, u8 second)
+{
+    RTCCTL01 |= RTCHOLD; // Stop the RTC
+    
+    sTime.hour   = hour;
+    sTime.minute = minute;
+    sTime.second = second;
+
+    // Set RTC module time to start value
+    RTCHOUR = hour;
+    RTCMIN = minute;
+    RTCSEC = second;
+    
+    RTCCTL01 &= ~RTCHOLD; // Start the RTC
+}
+
+
+void rtc_set_date(u16 year, u8 month, u8 day)
+{
+    RTCCTL01 |= RTCHOLD; // Stop the RTC
+
+    // Set date 
+    sDate.year  = year;
+    sDate.month = month;
+    sDate.day 	= day;
+#ifdef CONFIG_DAY_OF_WEEK
+    sDate.dayofweek = Calculate_DOW(); // Function defined in logic/date.c
+#endif
+    //RTCYEAR_H = (year & 0xFF00) >> 8;	//Upper byte of year
+    //RTCYEAR_L = year & 0x00FF;		//Lower byte of year
+    RTCYEAR = year; //gibbons TODO: does this work?
+    RTCMON = month;
+    RTCDAY = day;
+#ifdef CONFIG_DAY_OF_WEEK
+    RTCDOW = sDate.dayofweek; // Copy value, rather than waste cycles recalculating it
+#endif
+
+    RTCCTL01 &= ~RTCHOLD; // Start the RTC  
+}
+
+
 // *************************************************************************************************
 // @fn          RTC_A_ISR
 // @brief       IRQ handler for RTC Module
 // @param       none
 // @return      none
 // *************************************************************************************************
-//pfs 
 #ifdef __GNUC__  
 #include <signal.h>
-interrupt (RTC_VECTOR) RTC_A_ISR(void) //gibbons TODO: changed to RTC 1-sec ISR
+interrupt (RTC_VECTOR) RTC_A_ISR(void)
 #else
 #pragma vector = RTC_VECTOR
 __interrupt void RTC_A_ISR(void)
@@ -144,7 +187,6 @@ __interrupt void RTC_A_ISR(void)
 			break;
 			
 		case RTC_RTCRDYIFG: // RTC registers ready and safe to read (Use this for 1-sec update)
-			
 			
 			// Add 1 second to stored (global) time, update sTime.drawFlag appropriately
 			clock_tick();
@@ -300,7 +342,7 @@ __interrupt void RTC_A_ISR(void)
 			if (sys.flag.idle_timeout_enabled)
 			{
 				if (--sTime.last_activity == 0) sys.flag.idle_timeout = 1; //setFlag(sysFlag_g, SYS_TIMEOUT_IDLE);
-			} //gibbons TODO: fixed this?
+			} //gibbons FIXME: Update all code associated with last_activity
 			
 			// -------------------------------------------------------------------
 			// Detect continuous button high states

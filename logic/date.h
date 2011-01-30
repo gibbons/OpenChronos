@@ -44,10 +44,14 @@
 // *************************************************************************************************
 // Prototypes section
 extern void reset_date(void);
+#ifdef CONFIG_DAY_OF_WEEK
+extern u8 Calculate_DOW(void); // gibbons TODO: keep this function here, or move to rtc.c?
+#endif
 extern void add_day(void);
-extern void mx_date(u8 line);
-extern void sx_date(u8 line);
-extern void display_date(u8 line, u8 update);
+extern void mx_date(line_t line);
+extern void sx_date(line_t line);
+extern void display_date(line_t line, update_t update);
+
 
 
 // *************************************************************************************************

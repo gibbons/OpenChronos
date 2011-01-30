@@ -48,7 +48,6 @@
 #include "timer.h"
 
 // logic
-// gibbons TODO: rtc.h necessary?
 #include "rtc.h"
 #include "menu.h"
 #include "clock.h"
@@ -108,19 +107,8 @@ void reset_clock(void)
 {
 	// Set global system time to 0
 	sTime.system_time = 0;
-	RTCCTL01 |= RTCHOLD; // Stop the RTC
-
-	// Set main 24H time to start value
-	sTime.hour   = 4;
-	sTime.minute = 30;
-	sTime.second = 0;
-
-	// Set RTC module time to start value
-	RTCHOUR = 4u;
-	RTCMIN = 30u;
-	RTCSEC = 0u; //gibbons TODO: need unsigned ("u") designator after these numbers?
 	
-	RTCCTL01 &= ~RTCHOLD; // Start the RTC
+	rtc_set_time(4, 30, 0); // Set main 24H time to start value
 	
 	// Display style of both lines is default (HH:MM)
 	sTime.line1ViewStyle = DISPLAY_DEFAULT_VIEW;
@@ -168,33 +156,8 @@ void clock_tick(void)
 	
 	
 	// Increase global system time
-	sTime.system_time++;
+	sTime.system_time++; // gibbons TODO: change/remove this?
 
-	// Add 1 second
-	/*sTime.second++;
-
-	// Add 1 minute
-	if (sTime.second == 60)
-	{
-		sTime.second = 0;
-		sTime.minute++;
-		sTime.drawFlag++;
-
-		// Add 1 hour
-		if (sTime.minute == 60)
-		{
-			sTime.minute = 0;
-			sTime.hour++;
-			sTime.drawFlag++;
-
-			// Add 1 day
-			if (sTime.hour == 24)
-			{
-				sTime.hour = 0;
-				add_day();
-			}
-		}
-	}*/
 }
 
 
@@ -285,7 +248,7 @@ void mx_time(u8 line)
     timeformat 	= TIMEFORMAT_24H;
   }
   timeformat1	= timeformat;
-  hours 		= sTime.hour;
+  hours 	= sTime.hour;
   minutes 	= sTime.minute;
   seconds 	= sTime.second;
 
@@ -311,22 +274,11 @@ void mx_time(u8 line)
     if (button.flag.star)
     {
       // Stop clock timer
-      Timer0_Stop();
-      RTCCTL01 |= RTCHOLD;
-
-      // Store local variables in global clock time
-      sTime.hour 	 = hours;
-      sTime.minute = minutes;
-      sTime.second = seconds;
-      
-      // Set RTC module time
-      RTCHOUR = hours;
-      RTCMIN = minutes;
-      RTCSEC = seconds;
+      //Timer0_Stop();
+      rtc_set_time(hours, minutes, seconds);
 
       // Start clock timer
-      Timer0_Start();
-      RTCCTL01 &= ~RTCHOLD;
+      //Timer0_Start();
 
       // Full display update is done when returning from function
       display_symbol(LCD_SYMB_AM, SEG_OFF);

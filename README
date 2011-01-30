@@ -1,40 +1,30 @@
 
-Fork to make use of the Real Time Clock (RTC) module for timekeeping.
+Fixes rf sync feature and cleans up code to some degree.
 
-This fork ports all of the time-keeping and alarm responsibilities over to the RTC module.
-Previously, a 1-second interrupt from Timer A with time-keeping logic had been used.
 
-Ideally, these changes should be transparent to the rest of the code. The current date and
-time are managed by the RTC in its own registers, though a copy is updated each second in
-the sTime and sDate structures for use by all other code. As nice as it would be to just
-use the RTC module's registers for everything, reads to these registers can only be done
-reliably when the register isn't transitioning, indicated by the RTCRDRDY bit. Rather than
-test this bit every time and wait for it to be set before every read access to the current
-time and/or date, it's simply easier to just update sTime (and sDate, as necessary) once a
-second using the RTC module's 1-second interrupt.
+== Changes ==
 
-If you are working with TI's header files, be careful about the definitions for the RTC
-module's control registers! The bits for various options (e.g. RTCMODE) are often meant to
-be used on the full 16-bit register (e.g. RTCCTL01), not on single byte registers (e.g. 
-RTCCTL1). This created some odd problems for me!
+Fixed the rf sync feature (in logic/rfsimplicti.c) so it works again. In my port over
+to the RTC module, I'd forgotten to update this code.
+
+Added functions to set time, date, and alarm time.  This should reduce the codesize a
+little, not to mention make it easier to read and work with.
 
 
 == Status ==
 
-Very much a work-in-progress! Though it appears to keep time (over the course of about 45
-minutes), I can't make any guarantees.
+Time- and alarm-related functionalities seem to work. The stopwatch seems to work just fine.
+
+The relatively new option to hide the wireless update menu item behind the battery voltage
+has a bug -- whenever I switch to it, the watch freezes (until the watchdog times out).
+Updating wirelessly works fine without this option enabled.
 
 
 == Todo ==
 
-  * Test alarm functionality
+  * Fix bug with wireless update (when hidden behind battery menu item).
 
-  * Verify changes haven't disrupted other time-related code (sidereal clock, stopwatch,
-    eggtimer, etc.)
-
-  * Verify hour, day, day of week, month, and year transistions work correctly
-
-  * Update logic/rfsimpliciti.c to set time in RTC module registers when wirelessly syncing
+  * Verify changes haven't disrupted other time-related code (sidereal clock, eggtimer, etc.)
 
   * Re-arrange use of Timer A, now that TIMER0_A0 interrupt is unused
 
