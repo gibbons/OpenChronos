@@ -185,7 +185,6 @@ __interrupt void RTC_A_ISR(void)
 			break;
 			
 		case RTC_RT1PSIFG: // Interval timer (64Hz - 0.5Hz interrupts (binary powers) )
-			// gibbons TODO: put stopwatch or eggtimer 1/1 sec interrupt here?
 			break;
 			
 		case RTC_RTCRDYIFG: // RTC registers ready and safe to read (Use this for 1-sec update)
@@ -233,13 +232,31 @@ __interrupt void RTC_A_ISR(void)
 			// -------------------------------------------------------------------
 			// Service active modules that require 1/s processing
 			
+#ifdef CONFIG_EGGTIMER
+			if (sEggtimer.state == EGGTIMER_RUN) {
+				eggtimer_tick(); // Subtract 1 second from eggtimer's count
+			}
+			if (sEggtimer.state == EGGTIMER_ALARM) { // no "else if" intentional
+				// Decrement alarm duration counter
+				if (sEggtimer.duration-- > 0)
+				{
+					request.flag.eggtimer_buzzer = 1;
+				}
+				else
+				{
+					sEggtimer.duration = EGGTIMER_ALARM_DURATION;
+					stop_buzzer(); // FIXME: needs to play friendly with other buzzer-using modules (e.g. alarm)
+				}
+			}
+#endif
+			
 			// Generate alarm signal
 			if (sAlarm.state == ALARM_ON) 
 			{
 				// Decrement alarm duration counter
 				if (sAlarm.duration-- > 0)
 				{
-					request.flag.buzzer = 1;
+					request.flag.eggtimer_buzzer = 1;
 				}
 				else
 				{

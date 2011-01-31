@@ -398,7 +398,7 @@ __interrupt void TIMER0_A1_5_ISR(void)
 					update_stopwatch_timer();
 #endif
 #ifdef CONFIG_EGGTIMER
-					update_eggtimer_timer();
+					//update_eggtimer_timer(); // gibbons TODO: remove this
 #endif
 					// Enable timer interrupt    
 					TA0CCTL2 |= CCIE; 	

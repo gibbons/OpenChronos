@@ -151,7 +151,7 @@ u8 update_acceleration(void)
 #ifdef CONFIG_EGGTIMER
 u8 update_eggtimer(void)
 {
-	return (display.flag.update_stopwatch);
+	return (display.flag.update_eggtimer);
 }
 #endif
 
@@ -298,7 +298,7 @@ const struct menu menu_L2_Eggtimer =
         FUNCTION(sx_eggtimer),          // direct function
         FUNCTION(mx_eggtimer),          // sub menu function
         FUNCTION(menu_skip_next),	// next item function
-        FUNCTION(display_eggtimer),// display function
+        FUNCTION(display_eggtimer),	// display function
         FUNCTION(update_eggtimer),      // new display data
 };
 #endif

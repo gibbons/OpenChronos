@@ -58,12 +58,13 @@
 
 // *************************************************************************************************
 // Prototypes section
+extern void init_eggtimer(void);
 extern void start_eggtimer(void);
 extern void stop_eggtimer(void);
 extern void reset_eggtimer(void);
-extern u8 is_eggtimer(void);
+//extern u8 is_eggtimer(void); // gibbons TODO: remove this
 extern void eggtimer_tick(void);
-extern void update_eggtimer_timer(void);
+//extern void update_eggtimer_timer(void); // gibbons TODO: remove this
 extern void mx_eggtimer(u8 line);
 extern void sx_eggtimer(u8 line);
 extern void display_eggtimer(u8 line, u8 update);
@@ -72,43 +73,33 @@ extern void set_eggtimer(void);
 
 // *************************************************************************************************
 // Defines section
-#define EGGTIMER_1HZ_TICK			(32768/1)
-#define EGGTIMER_100HZ_TICK		(32768/100)
 #define EGGTIMER_STOP				(0u)
 #define EGGTIMER_RUN				(1u)
-#define EGGTIMER_HIDE				(2u)
+#define EGGTIMER_ALARM				(2u)
 
+#define EGGTIMER_ALARM_DURATION			(10u)
 
 // *************************************************************************************************
 // Global Variable section
 struct eggtimer
 {
         //NOTE: u8 means unsigned char
-	u8 		state;
-	u8		drawFlag;
-	u8		swtIs1Hz;
-	u8		swtIs10Hz;
+	u8	state;
+	u8	drawFlag;
 	
-	//	time[0] 	hour H
-	//	time[1] 	hour L
-	//	time[2] 	minute H
-	//	time[3] 	minute L
-	//	time[4] 	second H
-	//	time[5] 	second L
-	//	time[6] 	1/10 sec 
-	//	time[7] 	1/100 sec
-	u8		time[8];
+	// Values that are decremented each second
+	u8	hours;
+	u8	minutes;
+	u8	seconds;
 	
-	// Display style
-	u8 	viewStyle;
-        
-        //Default Eggtimer time
-        u8      defaultTime[8];
-        
-        //eggtimer update flag
-        u16 update_eggtimer     	: 1;    // 1 = Eggtimer was updated
+	// Values to default to, after timer runs out and is cleared
+	u8	default_hours;
+	u8	default_minutes;
+	u8	default_seconds;
+	
+	u8	duration; //Number of times to request buzzer double-beep when time is up
 };
-extern struct eggtimer seggtimer;
+extern struct eggtimer sEggtimer;
 
 
 // *************************************************************************************************

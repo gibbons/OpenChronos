@@ -283,8 +283,7 @@ void init_application(void)
 							// Enable (1-sec) RTC read ready interrupt
 	RTCCTL23 = 0; // RTC frequency calibration/adjustment, frequency output setup (on external pin)
 	RTCPS0CTL = 0; // Setup for Prescale timer 0 interrupt
-	RTCPS1CTL = 0; // Setup for Prescale timer 1 interrupt
-	
+	RTCPS1CTL = 0; // Prescale timer 1 interrupt
 	
 	// ---------------------------------------------------------------------
 	// Configure ports
@@ -411,8 +410,8 @@ void init_global_variables(void)
 	#endif
 
 #ifdef CONFIG_EGGTIMER
-	//Set Eggtimer to a 1 minute default
-	memcpy(seggtimer.defaultTime, "00010000", sizeof(seggtimer.time));
+	// Initialize eggtimer
+	init_eggtimer();
 	reset_eggtimer();
 #endif
 
@@ -591,10 +590,16 @@ void process_requests(void)
 	if (request.flag.voltage_measurement) battery_measurement();
 	#endif
 	
-	#ifdef CONFIG_ALARM  // N8VI NOTE eggtimer may want in on this
+	#ifdef CONFIG_ALARM || defined(CONFIG_EGGTIMER) // N8VI NOTE eggtimer may want in on this
 	// Generate alarm (two signals every second)
-	if (request.flag.buzzer) start_buzzer(2, BUZZER_ON_TICKS, BUZZER_OFF_TICKS);
+	if (request.flag.alarm_buzzer) start_buzzer(2, BUZZER_ON_TICKS, BUZZER_OFF_TICKS);
 	#endif
+	
+#ifdef CONFIG_EGGTIMER
+	// Generate alarm (two signals every second)
+	if (request.flag.eggtimer_buzzer) start_buzzer(2, BUZZER_ON_TICKS, BUZZER_OFF_TICKS);
+#endif
+	
 	
 #ifdef CONFIG_STRENGTH
 	if (request.flag.strength_buzzer && strength_data.num_beeps != 0) 
