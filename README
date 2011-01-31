@@ -1,30 +1,38 @@
 
-Fixes rf sync feature and cleans up code to some degree.
+Slightly changes manner of determining idle timeout, changes menu behavior for the
+wireless update feature when it's hidden behind the battery.
 
 
 == Changes ==
 
-Fixed the rf sync feature (in logic/rfsimplicti.c) so it works again. In my port over
-to the RTC module, I'd forgotten to update this code.
+Updated code to detect button inactivity when sTime.last_activity counts down to zero,
+removing the need for sTime.system_time (and any overflow detection technically needed,
+but not present).
 
-Added functions to set time, date, and alarm time.  This should reduce the codesize a
-little, not to mention make it easier to read and work with.
-
+The wireless update (rfbsl) menu, when hidden behind the battery, has been changed:
+pressing "down" toggles between the battery voltage and the rfbsl function. When the
+rfbsl function is selected, long_num activates the wireless update. This now uses the
+same code (for activating the wireless update) that the non-hidden version of rfbsl uses.
 
 == Status ==
 
 Time- and alarm-related functionalities seem to work. The stopwatch seems to work just fine.
 
-The relatively new option to hide the wireless update menu item behind the battery voltage
-has a bug -- whenever I switch to it, the watch freezes (until the watchdog times out).
-Updating wirelessly works fine without this option enabled.
+The "bug" I thought I had discovered with the wireless update (rfbsl) appears to have just
+been my own fault. The function works if you remember to turn on your wireless access point
+first! I have, however, changed the menu for the wireless update (when hidden behind the
+battery), such that pressing the down arrow goes into rfbsl mode, instead of long_num.
 
 
 == Todo ==
 
-  * Fix bug with wireless update (when hidden behind battery menu item).
-
   * Verify changes haven't disrupted other time-related code (sidereal clock, eggtimer, etc.)
+
+  * Tidy up menu code for battery and rfbsl when using hidden rfbsl option. (Should probably
+    merge their display functions for this mode, rather than use the display_discret_rfbsl
+    hack.)
+
+  * Update code sizes in config script (e.g. day of week now has a larger delta-codesize).
 
   * Re-arrange use of Timer A, now that TIMER0_A0 interrupt is unused
 

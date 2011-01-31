@@ -47,6 +47,7 @@
 #include "ports.h"
 
 // logic
+#include "battery.h"
 #include "rfbsl.h"
 //pfs
 #ifndef ELIMINATE_BLUEROBIN
@@ -64,7 +65,7 @@ u8 locked = 1;
 // Extern section
 extern void menu_skip_next(line_t line); //ezchronos.c
 
-#ifndef CONFIG_USE_DISCRET_RFBSL
+// ifndef CONFIG_USE_DISCRET_RFBSL
 // *************************************************************************************************
 // @fn          mx_rfbsl
 // @brief       This functions starts the RFBSL
@@ -75,11 +76,11 @@ void mx_rfbsl(u8 line)
 {
 	if (sys.flag.low_battery) return;
 
-    if (locked) {
-        message.flag.prepare = 1;
-        message.flag.type_locked = 1;
-        return;
-    }
+	if (locked) {
+	    message.flag.prepare = 1;
+	    message.flag.type_locked = 1;
+	    return;
+	}
 	
 	// Exit if BlueRobin stack is active
 	//pfs
@@ -103,7 +104,7 @@ void mx_rfbsl(u8 line)
 
 
 }
-#endif
+//endif
 // *************************************************************************************************
 // @fn          sx_rfbsl
 // @brief       This functions locks/unlocks the RFBSL
@@ -113,11 +114,23 @@ void mx_rfbsl(u8 line)
 void sx_rfbsl(u8 line)
 {
 #ifdef CONFIG_USE_DISCRET_RFBSL
-	clear_line(LINE2);
-	display_rfbsl(LINE2, DISPLAY_LINE_UPDATE_FULL);
-
+	if (locked) { // Was in battery mode, toggle to rfbsl mode
+		locked = 0;
+		
+		// The next bit is a little crude, but it works
+		clear_line(LINE2);
+		display_battery_V(LINE2, DISPLAY_LINE_CLEAR);
+		display_rfbsl(LINE2, DISPLAY_LINE_UPDATE_FULL);
+	}
+	else { // Was in rfbsl mode, toggle to battery mode
+		locked = 1;
+		clear_line(LINE2);
+		display_rfbsl(LINE2, DISPLAY_LINE_CLEAR); // Currently doesn't do anything
+		display_battery_V(LINE2, DISPLAY_LINE_UPDATE_FULL);
+	}
+	
 	// Loop values until all are set or user breaks	set
-	 while(1)
+	/* while(1)
 	  {
 	    // Idle timeout: exit without saving
 	    if (sys.flag.idle_timeout || button.flag.num)
@@ -141,7 +154,7 @@ void sx_rfbsl(u8 line)
 	    	// Call RFBSL
 	    	CALL_RFSBL();
 	      }
-	  }
+	  }*/
 
 #else
     message.flag.prepare = 1;
@@ -155,7 +168,7 @@ void sx_rfbsl(u8 line)
 #endif
 }
 
-#ifndef CONFIG_USE_DISCRET_RFBSL
+//ifndef CONFIG_USE_DISCRET_RFBSL
 // *************************************************************************************************
 // @fn          nx_rfbsl
 // @brief       This function locks the RFBSL and switches to next menu item
@@ -167,7 +180,7 @@ void nx_rfbsl(u8 line)
 	locked = 1;
 	menu_skip_next(line);
 }
-#endif
+//endif
 
 // *************************************************************************************************
 // @fn          display_rfbsl
@@ -183,3 +196,15 @@ void display_rfbsl(u8 line, u8 update)
 		display_chars(LCD_SEG_L2_5_0, (u8 *)" RFBSL", SEG_ON);
 	}
 }
+
+#ifdef CONFIG_USE_DISCRET_RFBSL
+void display_discret_rfbsl(u8 line, u8 update)
+{
+	if (locked) { // battery mode
+		display_battery_V(line, update);
+	}
+	else { // rfbsl mode
+		display_rfbsl(line, update);
+	}
+}
+#endif

@@ -42,6 +42,7 @@ extern void sx_rfbsl(u8 line);
 extern void mx_rfbsl(u8 line);
 extern void nx_rfbsl(u8 line);
 extern void display_rfbsl(u8 line, u8 update);
+extern void display_discret_rfbsl(u8 line, u8 update);
 
 
 // *************************************************************************************************

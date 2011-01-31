@@ -106,7 +106,7 @@ const u8 selection_Timeformat[][4] =
 void reset_clock(void)
 {
 	// Set global system time to 0
-	sTime.system_time = 0;
+	//sTime.system_time = 0; // gibbons TODO: remove this
 	
 	rtc_set_time(4, 30, 0); // Set main 24H time to start value
 	
@@ -156,7 +156,7 @@ void clock_tick(void)
 	
 	
 	// Increase global system time
-	sTime.system_time++; // gibbons TODO: change/remove this?
+	//sTime.system_time++; // gibbons TODO: remove this
 
 }
 

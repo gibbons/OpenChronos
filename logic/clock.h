@@ -61,7 +61,7 @@ extern u8 is_hour_am(u8 hour);
 // Global Variable section
 struct time
 {
-	u32 	system_time;
+	//u32 	system_time; // gibbons TODO: remove?
 
 	// Flag to minimize display updates
 	u8 		drawFlag;
@@ -76,7 +76,7 @@ struct time
 	u8 		second;
 	
 	// Inactivity detection (exits set_value() function)
-	u32 	last_activity;
+	u8 	last_activity; // gibbons TODO: is this big enough? (changed from u32 --> u8)
 	#ifdef CONFIG_SIDEREAL
 	// offset of local time from UTC (=1: set time is UTC+1 =CET)
 	s8		UTCoffset;

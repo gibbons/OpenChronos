@@ -181,9 +181,11 @@ __interrupt void RTC_A_ISR(void)
 	static u8 button_beep_counter = 0;
 	switch (RTCIV) {
 		case RTC_RT0PSIFG: // Interval timer (16384Hz - 128Hz interrupts (binary powers) )
+			// gibbons TODO: put stopwatch 1/100 sec interrupt here?
 			break;
 			
 		case RTC_RT1PSIFG: // Interval timer (64Hz - 0.5Hz interrupts (binary powers) )
+			// gibbons TODO: put stopwatch or eggtimer 1/1 sec interrupt here?
 			break;
 			
 		case RTC_RTCRDYIFG: // RTC registers ready and safe to read (Use this for 1-sec update)
@@ -341,8 +343,10 @@ __interrupt void RTC_A_ISR(void)
 			// Check idle timeout, set timeout flag
 			if (sys.flag.idle_timeout_enabled)
 			{
+			    if (sTime.last_activity > 0) {
 				if (--sTime.last_activity == 0) sys.flag.idle_timeout = 1; //setFlag(sysFlag_g, SYS_TIMEOUT_IDLE);
-			} //gibbons FIXME: Update all code associated with last_activity
+			    }
+			}
 			
 			// -------------------------------------------------------------------
 			// Detect continuous button high states
@@ -427,8 +431,6 @@ __interrupt void RTC_A_ISR(void)
 			break;
 			
 		case RTC_RTCAIFG: // User-configurable alarm event
-			// gibbons TODO: Add alarm code here
-			
 			// Indicate that alarm is on
 			sAlarm.state = ALARM_ON;
 			

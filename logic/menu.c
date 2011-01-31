@@ -306,14 +306,17 @@ const struct menu menu_L2_Eggtimer =
 #ifdef CONFIG_BATTERY
 const struct menu menu_L2_Battery =
 {
-	FUNCTION(dummy),					// direct function
-	#ifndef CONFIG_USE_DISCRET_RFBSL
+#ifndef CONFIG_USE_DISCRET_RFBSL
 	FUNCTION(dummy),					// sub menu function
-	#else
-	FUNCTION(sx_rfbsl),					//sub function calls RFBSL
-	#endif
-	FUNCTION(menu_skip_next),			// next item function
+	FUNCTION(dummy),					// direct function
+	FUNCTION(menu_skip_next),				// next item function
 	FUNCTION(display_battery_V),		// display function
+#else
+	FUNCTION(sx_rfbsl),					// sub menu function
+	FUNCTION(mx_rfbsl),					// direct function
+	FUNCTION(nx_rfbsl),					// next item function
+	FUNCTION(display_discret_rfbsl),
+#endif
 	FUNCTION(update_battery_voltage),	// new display data
 };
 #endif
