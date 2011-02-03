@@ -104,7 +104,7 @@ void set_alarm_time(u8 hour, u8 minute)
     RTCAHOUR = hour | RTC_AE;
     RTCAMIN = minute | RTC_AE;
     
-    if (sAlarm.state != ALARM_DISABLED) {
+    if (sAlarm.state != ALARM_DISABLED) { // gibbons TODO: == ALARM_ENABLED ?
       RTCCTL01 |= RTCAIE; //Re-enable RTC module alarm
     }    
 }
@@ -143,6 +143,7 @@ void stop_alarm(void)
 {
 	// Indicate that alarm is enabled, but not active
 	sAlarm.state = ALARM_ENABLED;
+	sAlarm.duration = ALARM_ON_DURATION; // Reset alarm duration counts
 	
 	// Stop buzzer
 	stop_buzzer();
@@ -157,31 +158,26 @@ void stop_alarm(void)
 // *************************************************************************************************
 void sx_alarm(u8 line)
 {
-	// UP: Alarm on, off
-	if(button.flag.up)
+	// Toggle alarm state
+	if (sAlarm.state == ALARM_DISABLED)		
 	{
-		// Toggle alarm state
-		if (sAlarm.state == ALARM_DISABLED)		
-		{
-			RTCCTL01 |= RTCAIE; //Enable alarm interrupt for RTC module
-			
-			sAlarm.state = ALARM_ENABLED;
-			
-			// Show "  on" message 
-			message.flag.prepare = 1;
-			message.flag.type_alarm_on = 1;
-		}
-		else if (sAlarm.state == ALARM_ENABLED)	
-		{
-			// Disable alarm in the RTC module
-			RTCCTL01 &= ~RTCAIE & ~RTCAIFG; //Disable alarm interrupt, clear interrupt flag
-			
-			sAlarm.state = ALARM_DISABLED;
+		RTCCTL01 |= RTCAIE; //Enable alarm interrupt for RTC module
+		
+		sAlarm.state = ALARM_ENABLED;
+		
+		// Show "  on" message 
+		message.flag.prepare = 1;
+		message.flag.type_alarm_on = 1;
+	}
+	else if (sAlarm.state == ALARM_ENABLED)	
+	{
+		RTCCTL01 &= ~RTCAIE & ~RTCAIFG; //Disable alarm interrupt, clear interrupt flag
+		
+		sAlarm.state = ALARM_DISABLED;
 
-			// Show "  off" message 
-			message.flag.prepare = 1;
-			message.flag.type_alarm_off = 1;
-		}
+		// Show "  off" message 
+		message.flag.prepare = 1;
+		message.flag.type_alarm_off = 1;
 	}
 }
 
@@ -230,11 +226,7 @@ void mx_alarm(u8 line)
 	  if (button.flag.star)
 	  {
 	    // Store local variables in global alarm time
-	    RTCCTL01 &= ~RTCAIE & ~RTCAIFG; // Disable RTC module alarm before making any changes
 	    set_alarm_time(hours, minutes);
-	    if (sAlarm.state != ALARM_DISABLED) { // Re-enable RTC module alarm
-	      RTCCTL01 |= RTCAIE; //Re-enable alarm
-	    }
 	    
 	    // Set display update flag
 	    display.flag.line1_full_update = 1;

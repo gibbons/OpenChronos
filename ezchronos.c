@@ -410,9 +410,7 @@ void init_global_variables(void)
 	#endif
 
 #ifdef CONFIG_EGGTIMER
-	// Initialize eggtimer
-	init_eggtimer();
-	reset_eggtimer();
+	init_eggtimer(); // Initialize eggtimer
 #endif
 
 #ifdef CONFIG_PROUT
@@ -590,7 +588,7 @@ void process_requests(void)
 	if (request.flag.voltage_measurement) battery_measurement();
 	#endif
 	
-	#ifdef CONFIG_ALARM || defined(CONFIG_EGGTIMER) // N8VI NOTE eggtimer may want in on this
+	#ifdef CONFIG_ALARM // N8VI NOTE eggtimer may want in on this
 	// Generate alarm (two signals every second)
 	if (request.flag.alarm_buzzer) start_buzzer(2, BUZZER_ON_TICKS, BUZZER_OFF_TICKS);
 	#endif

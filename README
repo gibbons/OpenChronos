@@ -1,31 +1,38 @@
 
-Rewrite of the eggtimer code -- compiles to be 599 bytes smaller. Other small eggtimer improvements.
+Fixes and updates eggtimer and alarm code, removes some unnecessary code.
 
 
 == Changes ==
 
-Eggtimer now run off of 1-sec RTC module interrupt. It also has its own buzzer request flag,
-which can be stopped by any button press (like the alarm functionality). The icon used for
-the eggtimer is solid on when in the eggtimer menu, and blinks (in any menu) when the
-eggtimer is running.
+Adds code in Port2 (button) interrupt to stop the eggtimer alarm if any button pressed.
 
-Maximum minutes and seconds are now 99 (for those of you who like to run a timer for 90
-minutes).
+Changes eggtimer functions (init, start, stop, reset, stop_alarm) to work better together.
+These could probably still be improved a fair amount. Display of the eggtimer icon is still
+a less-than-stellar method. (Tries to keep track of whether or not the eggtimer module is
+currently selected.)
 
+Removes some redundant code (e.g. button-press testing in sx_... functions, which are only
+to be called when a button is pressed!)
 
 
 == Status ==
 
-Time- and alarm-related functionalities seem to work. The stopwatch seems to work just fine.
-
-Eggtimer appears to be functional.
+Time-keeping, alarm, stopwatch, and eggtimer seem to work, though haven't been extensively
+tested.
 
 
 == Todo ==
 
   * Make stop_buzzer function aware of which buzzer it's stopping (alarm, eggtimer, etc.)
 
+  * Rewrite eggtimer and clock code to support 1 minute interrupts when applicable (idea
+    thanks to n8vi), reducing power usage even more. This will involve changing the eggtimer
+    to use the RTC alarm functionality for its hours and minutes, then 1-second interrupts
+    when it gets below 1 minute.
+
   * Verify changes haven't disrupted other code
+
+  * Combine sync and rfbsl menus (just an idea)
 
   * Tidy up menu code for battery and rfbsl when using hidden rfbsl option. (Should probably
     merge their display functions for this mode, rather than use the display_discret_rfbsl

@@ -297,7 +297,7 @@ const struct menu menu_L2_Eggtimer =
 {
         FUNCTION(sx_eggtimer),          // direct function
         FUNCTION(mx_eggtimer),          // sub menu function
-        FUNCTION(menu_skip_next),	// next item function
+        FUNCTION(nx_eggtimer),	// next item function
         FUNCTION(display_eggtimer),	// display function
         FUNCTION(update_eggtimer),      // new display data
 };

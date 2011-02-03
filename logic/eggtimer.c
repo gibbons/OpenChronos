@@ -65,9 +65,11 @@ void start_eggtimer(void);
 void stop_eggtimer(void);
 void reset_eggtimer(void);
 void eggtimer_tick(void);
+void stop_eggtimer_alarm(void);
 //void update_eggtimer_timer(void); // gibbons TODO: remove this
 void mx_eggtimer(u8 line);
 void sx_eggtimer(u8 line);
+void nx_eggtimer(u8 line);
 void display_eggtimer(u8 line, u8 update);
 extern void set_eggtimer(void);
 
@@ -87,13 +89,14 @@ struct eggtimer sEggtimer;
 
 void init_eggtimer()
 {
-    sEggtimer.state = EGGTIMER_STOP;
     // Set eggtimer default to 1 minute
     sEggtimer.default_hours = 0;
     sEggtimer.default_minutes = 1;
     sEggtimer.default_seconds = 0;
     
     sEggtimer.duration = EGGTIMER_ALARM_DURATION;
+    
+    reset_eggtimer();
 }
 
 
@@ -150,9 +153,8 @@ void init_eggtimer()
 // @param       none
 // @return      none
 // *************************************************************************************************
-void eggtimer_tick(void)
+void eggtimer_tick(void) //gibbons FIXME: This function needs some serious help
 {
-    //Make sure eggtimer is running before we do anything else (this might slightly mess up my timing, but oh well)
     if (sEggtimer.state != EGGTIMER_RUN) return;
     
     //sEggtimer.drawFlag == 1 --> seconds changed
@@ -162,13 +164,11 @@ void eggtimer_tick(void)
     sEggtimer.drawFlag = 1;
     display.flag.update_eggtimer = 1;
     
+    // gibbons TODO: If possible, try to merge the if and else if blocks into one
     if ((sEggtimer.hours == 0) && (sEggtimer.minutes == 0) && (sEggtimer.seconds == 1)) {
 	// Die Zeit ist um! Time's up!
-	stop_eggtimer(); // Stop counting, clear eggtimer icon
-	reset_eggtimer(); // Set eggtimer's counters back to what they started at (sEggtimer.state unchanged)
-	
-	// Beep until button pressed
 	sEggtimer.state = EGGTIMER_ALARM;
+	reset_eggtimer(); // Reset values to defaults
     }
     else if (sEggtimer.seconds-- == 0) { // NOTE: intentionally sEggtimer.seconds--, and not --sEggtimer.seconds
 	sEggtimer.seconds = 59;
@@ -297,7 +297,7 @@ void eggtimer_tick(void)
 
 // *************************************************************************************************
 // @fn          reset_eggtimer
-// @brief       Clears eggtimer counter. Note: doesn't stop eggtimer!
+// @brief       Clears (and stops) eggtimer counter.
 // @param       none
 // @return      none
 // *************************************************************************************************
@@ -307,8 +307,25 @@ void reset_eggtimer(void)
 	sEggtimer.hours = sEggtimer.default_hours;
 	sEggtimer.minutes = sEggtimer.default_minutes;
 	sEggtimer.seconds = sEggtimer.default_seconds;
+	
+	display.flag.update_eggtimer = 1; // gibbons TODO: need this?
 }
 
+
+
+
+void stop_eggtimer_alarm(void)
+{
+	sEggtimer.state = EGGTIMER_STOP;
+	sEggtimer.duration = EGGTIMER_ALARM_DURATION;
+	if (sEggtimer.menu_active) { // gibbons TODO: try to make this more elegant
+		display_symbol(LCD_ICON_RECORD, SEG_ON_BLINK_OFF);
+	}
+	else {
+		display_symbol(LCD_ICON_RECORD, SEG_OFF_BLINK_OFF);
+	}
+	stop_buzzer(); // FIXME: needs to play friendly with other buzzer-using modules (e.g. alarm)
+}
 
 // *************************************************************************************************
 // @fn          is_eggtimer
@@ -324,7 +341,7 @@ void reset_eggtimer(void)
 
 // *************************************************************************************************
 // @fn          start_eggtimer
-// @brief       Starts eggtimer timer interrupt and sets eggtimer state to on.
+// @brief       Sets eggtimer state to on, draws eggtimer icon blinking
 // @param       none
 // @return      none
 // *************************************************************************************************
@@ -340,8 +357,8 @@ void start_eggtimer(void)
 
 // *************************************************************************************************
 // @fn          stop_eggtimer
-// @brief       Stops eggtimer timer interrupt and sets eggtimer state to off.
-//				Does not reset eggtimer count.
+// @brief       Sets eggtimer state to off, but doesn't reset eggtimer count. 
+//		  Also draws eggtimer icon (solid on, no blink)
 // @param       none
 // @return      none
 // *************************************************************************************************
@@ -354,7 +371,7 @@ void stop_eggtimer(void)
 	display_symbol(LCD_ICON_RECORD, SEG_ON_BLINK_OFF);
 
 	// Call draw routine immediately
-	display_eggtimer(LINE2, DISPLAY_LINE_UPDATE_FULL);
+	//display_eggtimer(LINE2, DISPLAY_LINE_UPDATE_FULL); // gibbons TODO: need this?
 }
 
 
@@ -388,29 +405,31 @@ void mx_eggtimer(u8 line)
 // *************************************************************************************************
 void sx_eggtimer(u8 line)
 {
-	// S2: RUN, STOP
-	//if(button.flag.down) // gibbons TODO: does this still work?
-	//{
-		if (sEggtimer.state == EGGTIMER_STOP)
-		{
-			// (Re)start eggtimer
-			start_eggtimer();
-		}
-		else 
-		{
-			// Stop eggtimer 
-			stop_eggtimer();
-		}
-			
-	//}
+	if (sEggtimer.state == EGGTIMER_STOP)
+	{
+		// (Re)start eggtimer
+		start_eggtimer();
+	}
+	else 
+	{
+		// Stop eggtimer 
+		stop_eggtimer();
+	}
+}
+
+
+void nx_eggtimer(u8 line)
+{
+	sEggtimer.menu_active = 0;
+	menu_skip_next(line);
 }
 
 
 // *************************************************************************************************
 // @fn          display_eggtimer
-// @brief       eggtimer user routine. Sx starts/stops eggtimer, but does not reset count.
-// @param       u8 line	LINE2
-//				u8 update	DISPLAY_LINE_UPDATE_PARTIAL, DISPLAY_LINE_UPDATE_FULL
+// @brief       eggtimer user routine.
+// @param       u8 line		LINE2
+//		u8 update	DISPLAY_LINE_UPDATE_PARTIAL, DISPLAY_LINE_UPDATE_FULL
 // @return      none
 // *************************************************************************************************
 void display_eggtimer(u8 line, u8 update)
@@ -420,28 +439,26 @@ void display_eggtimer(u8 line, u8 update)
 	// Partial line update only
 	if (update == DISPLAY_LINE_UPDATE_PARTIAL)
 	{	
-//		if (seggtimer.update_eggtimer)
-                //if (display.flag.update_stopwatch) // gibbons FIXME: use eggtimer flag
-		//{ // gibbons TODO: safe to remove flag check?
-			// Check draw flag to minimize workload
-			switch(sEggtimer.drawFlag) 
-			{
-			    case 3: // Hours changed
-				str = itoa(sEggtimer.hours, 2, 0);
-				display_chars(LCD_SEG_L2_5_4, str, SEG_ON);
-			    case 2: // Minutes changed
-				str = itoa(sEggtimer.minutes, 2, 0);
-				display_chars(LCD_SEG_L2_3_2, str, SEG_ON);
-			    case 1: // Seconds changed
-				str = itoa(sEggtimer.seconds, 2, 0);
-				display_chars(LCD_SEG_L2_1_0, str, SEG_ON);
-			}
-			sEggtimer.drawFlag = 0; // Clear draw flag
-		//}
+		sEggtimer.menu_active = 1; // gibbons: Not pretty, but it works
+		// Check draw flag to minimize workload
+		switch(sEggtimer.drawFlag) 
+		{
+		    case 3: // Hours changed
+			str = itoa(sEggtimer.hours, 2, 0);
+			display_chars(LCD_SEG_L2_5_4, str, SEG_ON);
+		    case 2: // Minutes changed
+			str = itoa(sEggtimer.minutes, 2, 0);
+			display_chars(LCD_SEG_L2_3_2, str, SEG_ON);
+		    case 1: // Seconds changed
+			str = itoa(sEggtimer.seconds, 2, 0);
+			display_chars(LCD_SEG_L2_1_0, str, SEG_ON);
+		}
+		sEggtimer.drawFlag = 0; // Clear draw flag
 	}
 	// Redraw whole line
 	else if (update == DISPLAY_LINE_UPDATE_FULL)	
 	{
+		sEggtimer.menu_active = 1; // gibbons: Not pretty, but it works
 		// Display HH:MM:SS		
 		str = itoa(sEggtimer.hours, 2, 0);
 		display_chars(LCD_SEG_L2_5_4, str, SEG_ON);
@@ -453,11 +470,11 @@ void display_eggtimer(u8 line, u8 update)
 		display_symbol(LCD_SEG_L2_COL1, SEG_ON);
 		display_symbol(LCD_SEG_L2_COL0, SEG_ON);
 		
-		if (sEggtimer.state != EGGTIMER_STOP) {
+		if (sEggtimer.state != EGGTIMER_STOP) { // Blink if running or alarm triggered
 			display_symbol(LCD_ICON_RECORD, SEG_ON_BLINK_ON);
 		}
-		else {
-			display_symbol(LCD_ICON_RECORD, SEG_ON);
+		else { // Solid on if not running
+			display_symbol(LCD_ICON_RECORD, SEG_ON_BLINK_OFF);
 		}
 	}
 	else if (update == DISPLAY_LINE_CLEAR)
@@ -521,7 +538,7 @@ extern void set_eggtimer(void){
 			sEggtimer.seconds = sEggtimer.default_seconds = seconds;
 
 		        //Set display update flag
-			display.flag.line2_full_update = 1;
+			//display.flag.line2_full_update = 1; //Full display update (not hardcoded to line2!) called after this function
 			break;
 		}
 

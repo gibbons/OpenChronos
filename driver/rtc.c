@@ -236,6 +236,7 @@ __interrupt void RTC_A_ISR(void)
 			if (sEggtimer.state == EGGTIMER_RUN) {
 				eggtimer_tick(); // Subtract 1 second from eggtimer's count
 			}
+			
 			if (sEggtimer.state == EGGTIMER_ALARM) { // no "else if" intentional
 				// Decrement alarm duration counter
 				if (sEggtimer.duration-- > 0)
@@ -244,8 +245,7 @@ __interrupt void RTC_A_ISR(void)
 				}
 				else
 				{
-					sEggtimer.duration = EGGTIMER_ALARM_DURATION;
-					stop_buzzer(); // FIXME: needs to play friendly with other buzzer-using modules (e.g. alarm)
+					stop_eggtimer_alarm(); // Set state to Stop and reset duration
 				}
 			}
 #endif
@@ -256,11 +256,10 @@ __interrupt void RTC_A_ISR(void)
 				// Decrement alarm duration counter
 				if (sAlarm.duration-- > 0)
 				{
-					request.flag.eggtimer_buzzer = 1;
+					request.flag.alarm_buzzer = 1;
 				}
 				else
 				{
-					sAlarm.duration = ALARM_ON_DURATION;
 					stop_alarm();
 				}
 			}
