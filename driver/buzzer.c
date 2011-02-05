@@ -104,22 +104,25 @@ void start_buzzer(u8 cycles, u16 on_time, u16 off_time)
 		sBuzzer.off_time = off_time;
 
 		// Need to init every time, because SimpliciTI claims same timer
-			
+		
+		// gibbons TODO: Change timer to avoid constant re-initialization
+		
 		// Reset TA1R, set up mode, TA1 runs from 32768Hz ACLK 
-		TA1CTL = TACLR | MC_1 | TASSEL__ACLK;
+		//TA1CTL = TACLR | MC_1 | TASSEL__ACLK;
 
 		// Set PWM frequency 
-                TA1CCR0 = sBuzzer.steps;
+                //TA1CCR0 = sBuzzer.steps;
 
 		// Enable IRQ, set output mode "toggle"
-		TA1CCTL0 = OUTMOD_4;
+		//TA1CCTL0 = OUTMOD_4;
 
 		// Allow buzzer PWM output on P2.7
 		P2SEL |= BIT7;
 
 		// Activate Timer0_A3 periodic interrupts
-		fptr_Timer0_A3_function = toggle_buzzer;
-		Timer0_A3_Start(sBuzzer.on_time);
+		//fptr_Timer0_A3_function = toggle_buzzer;
+		//Timer0_A3_Start(sBuzzer.on_time);
+		Timer1_A0_Start(sBuzzer.on_time);
 
 		// Preload timer advance variable
 		sTimer.timer0_A3_ticks = sBuzzer.off_time;
@@ -132,6 +135,7 @@ void start_buzzer(u8 cycles, u16 on_time, u16 off_time)
 void start_buzzer_steps(u8 cycles, u16 on_time, u16 off_time, u8 steps )
 {
    sBuzzer.steps = steps;
+   TA1CCR2 = steps; // Set PWM frequency 
    start_buzzer( cycles, on_time, off_time );
 }
 

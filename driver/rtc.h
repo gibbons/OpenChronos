@@ -37,11 +37,21 @@
 #define RTC_H_
 
 //Alarm enable bit for RTC alarm registers (8th bit)
-#define RTC_AE	(0x80)
+#define RTC_AE			(0x80)
 
+// Time EVent configuration bits for RTCCTL01
+#ifdef CONFIG_TIMECHIME
+  // 12HR setting is not a valid configuration for RTCCTL01 -- proper settings handled in rtc_enable_tev
+  #define RTCTEV__12HR		(0x0400)
+#endif
 
 // Prototypes Section
-void rtc_set_time(u8 hour, u8 minute, u8 second);
-void rtc_set_date(u16 year, u8 month, u8 day);
+extern void rtc_set_time(u8 hour, u8 minute, u8 second);
+extern void rtc_set_date(u16 year, u8 month, u8 day);
+
+#ifdef CONFIG_TIMECHIME
+extern void rtc_enable_tev(u16 mode);
+extern void rtc_disable_tev();
+#endif
 
 #endif

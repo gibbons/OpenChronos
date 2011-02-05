@@ -207,6 +207,13 @@ DATA["CONFIG_TEMP"] = {
         "name": "Temperature",
         "depends": [],
         "default": True}
+DATA["CONFIG_TIMECHIME"] = {
+        "name": "Time of Day Chime",
+        "depends": [],
+        "default": True,
+        "help": "Small module to beep once on an hour, noon, midnight, or noon and midnight (12-Hr) transition."
+        }
+
 
 
 ###IMPLEMENTED BY LeanChronos. gventosa 09.10.2010

@@ -302,6 +302,9 @@ void start_simpliciti_tx_only(simpliciti_mode_t mode)
 	BUTTONS_IFG = 0x00;  
 	button.all_flags = 0;
 	
+	// Reset Timer1_A0 for buzzer's use
+	Timer1_Init();
+	
 	// Clear icons
 	display_symbol(LCD_ICON_BEEPER1, SEG_OFF_BLINK_OFF);
 	display_symbol(LCD_ICON_BEEPER2, SEG_OFF_BLINK_OFF);
@@ -659,6 +662,9 @@ void start_simpliciti_sync(void)
 	Timer0_A4_Delay(CONV_MS_TO_TICKS(BUTTONS_DEBOUNCE_TIME_OUT));
 	BUTTONS_IFG = 0x00;  
 	button.all_flags = 0;
+	
+	// Reset Timer1_A0 for buzzer's use
+	Timer1_Init();
 	
 	// Clear icons
 	display_symbol(LCD_ICON_BEEPER1, SEG_OFF_BLINK_OFF);
