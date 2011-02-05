@@ -1,18 +1,22 @@
 
-Fixes and updates eggtimer and alarm code, removes some unnecessary code.
+Adds time-of-day chime, currently hard-coded to noon. Removes a potential eggtimer bug.
 
 
 == Changes ==
 
-Adds code in Port2 (button) interrupt to stop the eggtimer alarm if any button pressed.
+Began using the Time EVent RTC interrupt for providing a simple beep at particular times of
+day. Though currently hard-coded for just noon, the option to beep on minute, hour, noon,
+midnight, or 12-hour (noon and midnight) roll-overs is fully implemented, though not tested.
 
-Changes eggtimer functions (init, start, stop, reset, stop_alarm) to work better together.
-These could probably still be improved a fair amount. Display of the eggtimer icon is still
-a less-than-stellar method. (Tries to keep track of whether or not the eggtimer module is
-currently selected.)
+In the process of writing this code, I believe I found a bug in TI's header file for the
+ezChronos watch (cc430x613x.h or cc430f6137.h): the values for RTCTEV__0000 and
+RTCTEV__1200 have been reversed, effectively reversing noon and midnight. These values will
+need to be swapped, and the comments for these values and for RTCTEV_2 and RTCTEV_3 will
+also need to be swapped.
 
-Removes some redundant code (e.g. button-press testing in sx_... functions, which are only
-to be called when a button is pressed!)
+I also removed a call to eggtimer_tick() in the ISR for Timer0_A2, which I apparently forgot
+to delete when I ported the code over to the RTC interrupt. This likely would have caused
+the eggtimer to run twice as fast when run simultaneously with the stopwatch.
 
 
 == Status ==
@@ -23,12 +27,16 @@ tested.
 
 == Todo ==
 
+  * Make menu item for configuring time-of-day chime, remove hard-coded beep at noon.
+
   * Make stop_buzzer function aware of which buzzer it's stopping (alarm, eggtimer, etc.)
 
   * Rewrite eggtimer and clock code to support 1 minute interrupts when applicable (idea
     thanks to n8vi), reducing power usage even more. This will involve changing the eggtimer
     to use the RTC alarm functionality for its hours and minutes, then 1-second interrupts
     when it gets below 1 minute.
+
+  * Fix bug when displaying seconds: AM/PM indicator doesn't change when rolling over.
 
   * Verify changes haven't disrupted other code
 
@@ -44,8 +52,6 @@ tested.
 
   * Update and/or verify IAR project file (probably just need to add "rtc.c" and "rtc.h"
     references somewhere)
-
-  * Add in optional hour or noon/midnight beep functionality via RTCTEV interrupt
 
 == Requirements ==
 

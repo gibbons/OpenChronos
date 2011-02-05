@@ -316,6 +316,12 @@ void init_application(void)
 	// ---------------------------------------------------------------------
 	// Init pressure sensor
 	ps_init();
+	
+	// ---------------------------------------------------------------------
+	// Init Time of Day chime (currently hardcoded for a beep at noon)
+#ifdef CONFIG_TIMECHIME
+	rtc_enable_tev(RTCTEV__1200);
+#endif
 }
 
 

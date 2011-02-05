@@ -50,6 +50,7 @@
 #include "vti_as.h"
 #endif
 #include "display.h"
+#include "rtc.h"
 
 // logic
 #include "clock.h"
@@ -109,6 +110,10 @@ void rtc_set_date(u16 year, u8 month, u8 day);
 //gibbons TODO: update this section as needed
 //struct timer sTimer;
 
+#ifdef CONFIG_TIMECHIME
+u8 RTC_Toggle_12Hr; // Flag to toggle the Time EVent type between noon and midnight for a 12-hr effect
+#endif
+
 // *************************************************************************************************
 // Extern section
 //gibbons TODO: update this section as needed
@@ -158,6 +163,34 @@ void rtc_set_date(u16 year, u8 month, u8 day)
 
     RTCCTL01 &= ~RTCHOLD; // Start the RTC  
 }
+
+#ifdef CONFIG_TIMECHIME
+// Enable Time EVent interrupt (currently just beeps)
+void rtc_enable_tev(u16 mode)
+{
+    if (mode == RTCTEV__12HR) {
+	RTC_Toggle_12Hr = 1;
+	// Now determine if noon or midnight comes first, set mode accordingly
+	if (sTime.hour < 12) { // noon comes first
+	    mode = RTCTEV__1200;
+	}
+	else {
+	    mode = RTCTEV__0000;
+	}
+    }
+    else {
+	RTC_Toggle_12Hr = 0;
+    }
+    RTCCTL01 &= ~(0x0300); //Clear lower two bits (Time EVent mode selection)
+    RTCCTL01 |= (mode & 0x0300); // Set mode; masking to be safe: no need to clobber the whole register
+    RTCCTL01 |= RTCTEVIE; // Enable TEV interrupt    
+}
+
+void rtc_disable_tev()
+{
+    RTCCTL01 &= ~RTCTEVIE & ~RTCTEVIFG; // Disable interrupt and clear interrupt flag
+}
+#endif
 
 
 // *************************************************************************************************
@@ -443,7 +476,11 @@ __interrupt void RTC_A_ISR(void)
 			break;
 			
 		case RTC_RTCTEVIFG: // Interval alarm event (min or hour changed, or rollover to midnight or noon) (choose one)
-			// gibbons TODO: Add in ability to have minute, hour, noon, or midnight beep
+			// Minute, hour, noon, or midnight rollover beep (same beep as button press, at least for now)
+#ifdef CONFIG_TIMECHIME
+			start_buzzer(1, CONV_MS_TO_TICKS(20), CONV_MS_TO_TICKS(150));
+			if (RTC_Toggle_12Hr) RTCCTL01 ^= 0x0100; // Toggle Time EVent between noon and midnight
+#endif
 			break;
 			
 		case RTC_RTCAIFG: // User-configurable alarm event
