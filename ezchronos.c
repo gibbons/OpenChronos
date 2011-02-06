@@ -84,6 +84,9 @@
 #ifdef CONFIG_SIDEREAL
 #include "sidereal.h"
 #endif
+#ifdef CONFIG_CW
+#include "cw.h"
+#endif
 
 #ifdef CONFIG_INFOMEM
 #include "infomem.h"
@@ -169,6 +172,11 @@ int main(void)
 	display_all_off();
 #endif
 	
+#ifdef CONFIG_CW
+	  //u8 * alphabet = "ABC DEF GHI\0";
+	  CW_Send_Char();//0x42);
+	  CW_Send_String();//alphabet);
+#endif
 	// Main control loop: wait in low power mode until some event needs to be processed
 	while(1)
 	{

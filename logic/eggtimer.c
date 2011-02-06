@@ -85,7 +85,7 @@ struct eggtimer sEggtimer;
 
 // *************************************************************************************************
 // Extern section
-
+extern void menu_skip_next(line_t line); //ezchronos.c
 
 void init_eggtimer()
 {

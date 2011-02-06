@@ -1,31 +1,23 @@
 
-Adds time-of-day chime, currently hard-coded to noon. Removes a potential eggtimer bug.
+Fork to add Morse Code (CW) sending capabilities.  
 
 
 == Changes ==
 
-Began using the Time EVent RTC interrupt for providing a simple beep at particular times of
-day. Though currently hard-coded for just noon, the option to beep on minute, hour, noon,
-midnight, or 12-hour (noon and midnight) roll-overs is fully implemented, though not tested.
+Adds the ability to send chars or strings as Morse Code over the buzzer.
 
-In the process of writing this code, I believe I found a bug in TI's header file for the
-ezChronos watch (cc430x613x.h or cc430f6137.h): the values for RTCTEV__0000 and
-RTCTEV__1200 have been reversed, effectively reversing noon and midnight. These values will
-need to be swapped, and the comments for these values and for RTCTEV_2 and RTCTEV_3 will
-also need to be swapped.
-
-I also removed a call to eggtimer_tick() in the ISR for Timer0_A2, which I apparently forgot
-to delete when I ported the code over to the RTC interrupt. This likely would have caused
-the eggtimer to run twice as fast when run simultaneously with the stopwatch.
-
+Corrects a bug in the eggtimer code that had been implicitly declaring a function
+(menu_skip_next).
 
 == Status ==
 
-Time-keeping, alarm, stopwatch, and eggtimer seem to work, though haven't been extensively
-tested.
+Won't link (ld error), and I can't yet figure out why.  Most likely something dumb on my part.
+Needless to say, this means this code is completely untested.
 
 
 == Todo ==
+
+  * Fix compiling (ld, so technially linking) error.
 
   * Make menu item for configuring time-of-day chime, remove hard-coded beep at noon.
 
