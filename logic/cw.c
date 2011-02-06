@@ -127,7 +127,7 @@ void CW_Send_Char(u8 letter)
 	letter = CW_Char[letter - 'A' + 10]; // +10 to offset over the number section
     }
     else if (letter == ' ') { // Send space (inter-word pause)
-	Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_WORD_PAUSE));
+	Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_WORD_PAUSE * CW_DOT_LENGTH));
 	return;
     }
     else {

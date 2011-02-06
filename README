@@ -1,6 +1,6 @@
 
-Fixes linking error. Corrects a bug where the delay periods were 1-3 ms long, instead of
-1-3 durations of a "dot" length.
+Corrects another bug where the delay periods between words were 7 ms long, instead of
+7 durations of a "dot" length.
 
 
 == Changes ==
