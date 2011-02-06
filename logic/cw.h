@@ -40,7 +40,7 @@
 // Defines Section
 // ******************************************************************************
 // Length of a "dot" in ms; three times this length for a dash
-#define CW_DOT_LENGTH		(150u)
+#define CW_DOT_LENGTH		(50u)
 
 // For masking off the data bits in cw_char[]
 #define CW_LENGTH_MASK		(0x07)
@@ -52,7 +52,9 @@
 
 // Prototypes Section
 // ******************************************************************************
-extern void CW_Send_Char(void);//u8 letter);
-extern void CW_Send_String(void);//u8 * word);
+extern void CW_Send_Char(u8 letter);
+extern void CW_Send_String(u8 * word);
+
+extern const u8 CW_Char[];
 
 #endif

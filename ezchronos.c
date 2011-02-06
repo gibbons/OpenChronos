@@ -172,11 +172,6 @@ int main(void)
 	display_all_off();
 #endif
 	
-#ifdef CONFIG_CW
-	  //u8 * alphabet = "ABC DEF GHI\0";
-	  CW_Send_Char();//0x42);
-	  CW_Send_String();//alphabet);
-#endif
 	// Main control loop: wait in low power mode until some event needs to be processed
 	while(1)
 	{
@@ -477,7 +472,12 @@ void wakeup_event(void)
 	// Process long button press event (while button is held)
 	else if (button.flag.star_long)
 	{
-		// Clear button event
+		#ifdef CONFIG_CW
+			u8 * alphabet = "ABC DEF GHI  SOS\0";
+			CW_Send_String(alphabet);
+		#endif
+		
+		 // Clear button event
 		button.flag.star_long = 0;
 
 		// Call sub menu function

@@ -36,7 +36,6 @@
 // *************************************************************************************************
 
 // *************************************************************************************************
-#ifdef CONFIG_CW
 // Include section
 // system
 #include "project.h"
@@ -56,69 +55,6 @@
 
 // *************************************************************************************************
 // Global Variable section
-
-// *************************************************************************************************
-// Extern section
-extern void idle_loop(void);
-
-
-// *************************************************************************************************
-// @fn          RTC_A_ISR
-// @brief       IRQ handler for RTC Module
-// @param       none
-// @return      none
-// *************************************************************************************************
-
-void CW_Send_Char(void)
-{
-    u8 mask = 0x80;
-    u8 letter = CW_Char[12];
-    if ((letter >= '0') && (letter <= '9')) { // Number
-	letter = CW_Char[letter - '0'];
-    }
-    else if ((letter >= 'A') && (letter <= 'Z')) { // Alphabetic Letter
-	letter = CW_Char[letter - 'A' + 10]; // +10 to offset over the number section
-    }
-    else if (letter == ' ') { // Send space (inter-word pause)
-	Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_WORD_PAUSE));
-	return;
-    }
-    else {
-	return;
-    }
-    
-    while (letter-- & CW_LENGTH_MASK) {
-	if (letter & mask) { // Send dash
-	    start_buzzer(1, CONV_MS_TO_TICKS(3*CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE));
-	}
-	else { // Send dot
-	    start_buzzer(1, CONV_MS_TO_TICKS(CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE));
-	}
-	mask >>= 1;
-	// Wait until finished buzzing
-	while (is_buzzer()) {
-	    idle_loop(); // Go into LPM3
-	}
-	
-	// Now send inter-signal pause (space between successive dots and dashs in the letter)
-	//Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE));
-    }
-    
-    // Now send inter-letter pause (space between successive letters)
-    Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_LETTER_PAUSE));
-    
-}
-
-
-void CW_Send_String(void)//u8 * word)
-{
-    u8 * word = {unsigned('C'};
-    u8 i = 0;
-    while (*(word + i) != '\0') {
-	CW_Send_Char(*(word + i));
-	i++;
-    }
-}
 
 // Signal patterns for CW numbers and letters
 //
@@ -169,4 +105,63 @@ const u8 CW_Char[] =
   0xC4	// Z
 };
 
-#endif
+// *************************************************************************************************
+// Extern section
+extern void idle_loop(void);
+
+
+// *************************************************************************************************
+// @fn          RTC_A_ISR
+// @brief       IRQ handler for RTC Module
+// @param       none
+// @return      none
+// *************************************************************************************************
+
+void CW_Send_Char(u8 letter)
+{
+    u8 mask = 0x80;
+    if ((letter >= '0') && (letter <= '9')) { // Number
+	letter = CW_Char[letter - '0'];
+    }
+    else if ((letter >= 'A') && (letter <= 'Z')) { // Alphabetic Letter
+	letter = CW_Char[letter - 'A' + 10]; // +10 to offset over the number section
+    }
+    else if (letter == ' ') { // Send space (inter-word pause)
+	Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_WORD_PAUSE));
+	return;
+    }
+    else {
+	return;
+    }
+    
+    while (letter-- & CW_LENGTH_MASK) {
+	if (letter & mask) { // Send dash
+	    start_buzzer(1, CONV_MS_TO_TICKS(3*CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
+	}
+	else { // Send dot
+	    start_buzzer(1, CONV_MS_TO_TICKS(CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
+	}
+	mask >>= 1;
+	// Wait until finished buzzing
+	while (is_buzzer()) {
+	    idle_loop(); // Go into LPM3
+	}
+	
+	// Now send inter-signal pause (space between successive dots and dashs in the letter)
+	//Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE));
+    }
+    
+    // Now send inter-letter pause (space between successive letters)
+    Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_LETTER_PAUSE * CW_DOT_LENGTH));
+    
+}
+
+
+void CW_Send_String(u8 * word)
+{
+    u8 i = 0;
+    while (*(word + i) != '\0') {
+	CW_Send_Char(*(word + i));
+	i++;
+    }
+}

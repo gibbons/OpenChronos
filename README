@@ -1,24 +1,29 @@
 
-Fork to add Morse Code (CW) sending capabilities.  
+Fixes linking error. Corrects a bug where the delay periods were 1-3 ms long, instead of
+1-3 durations of a "dot" length.
 
 
 == Changes ==
 
-Adds the ability to send chars or strings as Morse Code over the buzzer.
+Fixes the mysterious linking error I was receiving (my own fault, of course!). Apparently
+you should NOT define or initialize variables in a header file, just declare them. Also,
+wrapping the entire cw.c file with (#ifdef CONFIG_CW) doesn't seem to have been helping.
+You learn something new every day!
 
-Corrects a bug in the eggtimer code that had been implicitly declaring a function
-(menu_skip_next).
 
 == Status ==
 
-Won't link (ld error), and I can't yet figure out why.  Most likely something dumb on my part.
-Needless to say, this means this code is completely untested.
+It seems to work!  Now I just need to verify all the letters (and numbers), as well as
+create a menu item for it. It's currently hardcoded to spew out some letters when the
+start (*) button is held down for a long press.
 
 
 == Todo ==
 
-  * Fix compiling (ld, so technially linking) error.
+  * Create user interface (menu item).
 
+  * Verify all letters and numbers.
+  
   * Make menu item for configuring time-of-day chime, remove hard-coded beep at noon.
 
   * Make stop_buzzer function aware of which buzzer it's stopping (alarm, eggtimer, etc.)
