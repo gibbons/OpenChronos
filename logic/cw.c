@@ -43,6 +43,7 @@
 // driver
 #include "timer.h"
 #include "buzzer.h"
+#include "display.h"
 
 // logic
 #include "cw.h"
@@ -55,6 +56,17 @@
 
 // *************************************************************************************************
 // Global Variable section
+u8 CW_Test_Set_Index = 0;
+
+/*u8 * Test_Set[] = {
+    "ABCDEF\0",
+    "GHIJK\0",
+    "LMNOP\0",
+    "QRSTU\0",
+    "VWXYZ\0",
+    "01234\0",
+    "56789\0"
+};*/
 
 // Signal patterns for CW numbers and letters
 //
@@ -64,7 +76,6 @@
 // 	Signal Data = 10100
 // 	Length= 100 = 4
 // 	Signal = 1010 = Dash Dot Dash Dot
-
 const u8 CW_Char[] =
 {
   0xFD,	// 0
@@ -109,13 +120,6 @@ const u8 CW_Char[] =
 // Extern section
 extern void idle_loop(void);
 
-
-// *************************************************************************************************
-// @fn          RTC_A_ISR
-// @brief       IRQ handler for RTC Module
-// @param       none
-// @return      none
-// *************************************************************************************************
 
 void CW_Send_Char(u8 letter)
 {
@@ -164,4 +168,46 @@ void CW_Send_String(u8 * word)
 	CW_Send_Char(*(word + i));
 	i++;
     }
+}
+
+
+void CW_Send_Test(u8 set)
+{
+    u8 i = 0;
+    u8 letter;
+    u8 set_size = 5;
+    if (set >= 7) set = 6; // Bounds check
+
+    letter = set * 5;
+    if (letter > 9) { // alphabetic letter
+	letter += 'A' - 10;
+	if (set == 2) {
+	    set_size++; //Set 2 == "ABCDEF" (six letters, instead of normal five)
+	}
+	else {
+	    letter++; // To account for shift due to set 2 having six letters
+	}
+    }
+    else { // numeric "letter"
+	letter += '0';
+    }
+    
+    do {
+	display_char(LCD_SEG_L2_0, (letter + i), SEG_ON);
+	CW_Send_Char(letter + i);
+    } while (++i < set_size);
+}
+
+
+void sx_cw(u8 line)
+{
+    CW_Send_Test(CW_Test_Set_Index);
+    if (++CW_Test_Set_Index >= 7) CW_Test_Set_Index = 0;
+}
+
+
+void display_cw(u8 line, u8 mode)
+{
+    if (mode == DISPLAY_LINE_UPDATE_FULL) display_chars(LCD_SEG_L2_3_2, "CW", SEG_ON);
+    else if (mode == DISPLAY_LINE_CLEAR) CW_Test_Set_Index = 0; // Assume we're leaving the CW menu: reset index
 }

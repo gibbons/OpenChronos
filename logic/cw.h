@@ -55,6 +55,9 @@
 extern void CW_Send_Char(u8 letter);
 extern void CW_Send_String(u8 * word);
 
+extern void sx_cw(u8 line);
+extern void display_cw(u8 line, u8 mode);	
+
 extern const u8 CW_Char[];
 
 #endif

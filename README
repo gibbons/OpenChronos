@@ -1,28 +1,28 @@
 
-Corrects another bug where the delay periods between words were 7 ms long, instead of
-7 durations of a "dot" length.
+Adds a CW alpha-numeric test function, along with a simple menu entry.
 
 
 == Changes ==
 
-Fixes the mysterious linking error I was receiving (my own fault, of course!). Apparently
-you should NOT define or initialize variables in a header file, just declare them. Also,
-wrapping the entire cw.c file with (#ifdef CONFIG_CW) doesn't seem to have been helping.
-You learn something new every day!
+Adds a Line 2 menu entry (after the eggtimer) for testing all the numbers and letters.
+Also adds a convenience function to run through all the letters and numbers.
 
 
 == Status ==
 
-It seems to work!  Now I just need to verify all the letters (and numbers), as well as
-create a menu item for it. It's currently hardcoded to spew out some letters when the
-start (*) button is held down for a long press.
+All of the letters and numbers have been verified! As far as I'm concerned, the core of
+this module is completed.  Anything from here on out will likely just be niceties, such
+as making the test code and/or menu entry optional to reduce codesize.
+
+At this point I need to document the code -- something I dislike doing while I'm actually
+coding!
 
 
 == Todo ==
+  
+  * Document the CW code!
 
-  * Create user interface (menu item).
-
-  * Verify all letters and numbers.
+  * Make test code and menu entry optional.
   
   * Make menu item for configuring time-of-day chime, remove hard-coded beep at noon.
 

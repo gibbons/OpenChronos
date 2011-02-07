@@ -131,6 +131,10 @@ extern const struct menu menu_L2_Vario;
 extern const struct menu menu_L2_Gps;
 #endif
 
+#ifdef CONFIG_CW
+extern const struct menu menu_L2_CW;
+#endif
+
 // Pointers to current menu item
 extern const struct menu * ptrMenu_L1;
 extern const struct menu * ptrMenu_L2;

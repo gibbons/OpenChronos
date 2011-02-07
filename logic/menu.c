@@ -96,6 +96,10 @@
 #include "gps.h"
 #endif
 
+#ifdef CONFIG_CW
+#include "cw.h"
+#endif
+
 
 // *************************************************************************************************
 // Defines section
@@ -161,7 +165,6 @@ u8 update_sidereal(void)
 	return (display.flag.update_sidereal_time);
 }
 #endif
-
 
 // *************************************************************************************************
 // User navigation ( [____] = default menu item after reset )
@@ -427,6 +430,17 @@ const struct menu menu_L2_Gps =
 };
 #endif
 
+#ifdef CONFIG_CW
+// Line2 - CW (Morse Code)
+const struct menu menu_L2_CW =
+{
+	FUNCTION(sx_cw),				// direct function
+	FUNCTION(dummy),				// sub menu function
+	FUNCTION(menu_skip_next),			// next item function
+	FUNCTION(display_cw),				// display function
+	FUNCTION(update_time),				// new display data
+};
+#endif
 // *************************************************************************************************
 // menu array
 
@@ -466,6 +480,9 @@ const struct menu *menu_L2[]={
 	#endif
 	#ifdef CONFIG_EGGTIMER
 	&menu_L2_Eggtimer,
+	#endif
+	#ifdef CONFIG_CW
+	&menu_L2_CW,
 	#endif
 	#ifdef CONFIG_BATTERY
 	&menu_L2_Battery,
