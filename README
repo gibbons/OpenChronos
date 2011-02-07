@@ -1,11 +1,12 @@
 
-Adds a CW alpha-numeric test function, along with a simple menu entry.
+Adds CW module documentation, removes some test code.
 
 
 == Changes ==
 
-Adds a Line 2 menu entry (after the eggtimer) for testing all the numbers and letters.
-Also adds a convenience function to run through all the letters and numbers.
+Documents functions in CW module.
+
+Removes some test code I had placed in the long press section for the star (*) button.
 
 
 == Status ==
@@ -14,13 +15,8 @@ All of the letters and numbers have been verified! As far as I'm concerned, the 
 this module is completed.  Anything from here on out will likely just be niceties, such
 as making the test code and/or menu entry optional to reduce codesize.
 
-At this point I need to document the code -- something I dislike doing while I'm actually
-coding!
-
 
 == Todo ==
-  
-  * Document the CW code!
 
   * Make test code and menu entry optional.
   

@@ -42,7 +42,7 @@
 // Length of a "dot" in ms; three times this length for a dash
 #define CW_DOT_LENGTH		(50u)
 
-// For masking off the data bits in cw_char[]
+// For masking off the letter length in cw_char[]
 #define CW_LENGTH_MASK		(0x07)
 
 // Pause lengths, in units of CW_DOT_LENGTH's

@@ -51,22 +51,11 @@
 
 // *************************************************************************************************
 // Prototypes section
-//void CW_Send_Char(u8 letter);
-//void CW_Send_Str(u8 * word);
+
 
 // *************************************************************************************************
 // Global Variable section
 u8 CW_Test_Set_Index = 0;
-
-/*u8 * Test_Set[] = {
-    "ABCDEF\0",
-    "GHIJK\0",
-    "LMNOP\0",
-    "QRSTU\0",
-    "VWXYZ\0",
-    "01234\0",
-    "56789\0"
-};*/
 
 // Signal patterns for CW numbers and letters
 //
@@ -118,14 +107,20 @@ const u8 CW_Char[] =
 
 // *************************************************************************************************
 // Extern section
-extern void idle_loop(void);
+extern void idle_loop(void); // in ezchronos.c
 
 
+// *************************************************************************************************
+// @fn          CW_Send_Char
+// @brief       Send (via the buzzer) an alphanumeric character
+// @param       letter		character to send, in range '0' to '9' or 'A' to 'Z', inclusive
+// @return      none
+// *************************************************************************************************
 void CW_Send_Char(u8 letter)
 {
-    u8 mask = 0x80;
+    u8 data_mask = 0x80; // Signal data mask
     if ((letter >= '0') && (letter <= '9')) { // Number
-	letter = CW_Char[letter - '0'];
+	letter = CW_Char[letter - '0']; // Get first "letter"
     }
     else if ((letter >= 'A') && (letter <= 'Z')) { // Alphabetic Letter
 	letter = CW_Char[letter - 'A' + 10]; // +10 to offset over the number section
@@ -134,43 +129,62 @@ void CW_Send_Char(u8 letter)
 	Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_WORD_PAUSE * CW_DOT_LENGTH));
 	return;
     }
-    else {
+    else { // Invalid character
 	return;
     }
     
+    // letter in the next loop doubles as both the loop counter and the signal data
     while (letter-- & CW_LENGTH_MASK) {
-	if (letter & mask) { // Send dash
+	if (letter & data_mask) { // Send dash (and pause after it)
 	    start_buzzer(1, CONV_MS_TO_TICKS(3*CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
 	}
-	else { // Send dot
+	else { // Send dot (and pause after it)
 	    start_buzzer(1, CONV_MS_TO_TICKS(CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
 	}
-	mask >>= 1;
+	data_mask >>= 1; // Next loop iteration will send the bit to the right
+	
 	// Wait until finished buzzing
 	while (is_buzzer()) {
 	    idle_loop(); // Go into LPM3
 	}
-	
-	// Now send inter-signal pause (space between successive dots and dashs in the letter)
-	//Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE));
     }
     
     // Now send inter-letter pause (space between successive letters)
     Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_LETTER_PAUSE * CW_DOT_LENGTH));
-    
 }
 
 
-void CW_Send_String(u8 * word)
+// *************************************************************************************************
+// @fn          CW_Send_String
+// @brief       Send (via the buzzer) an alphanumeric, null ('\0') terminated string
+// @param       str	string to send; characters in range '0' to '9' or 'A' to 'Z', inclusive
+//			Must be terminated with a null character!
+// @return      none
+// *************************************************************************************************
+void CW_Send_String(u8 * str)
 {
     u8 i = 0;
-    while (*(word + i) != '\0') {
-	CW_Send_Char(*(word + i));
+    while (*(str + i) != '\0') { // Loop over string elements until null character ('\0') found
+	CW_Send_Char(*(str + i));
 	i++;
     }
 }
 
 
+// *************************************************************************************************
+// @fn          CW_Send_Test
+// @brief       Send (via the buzzer) an alphanumeric test string; character being sent is shown on
+//			line 2, segment 0
+// @param       set	Set number between 0 and 6, inclusive.
+//			0 --> "01234"
+//			1 --> "56789"
+//			2 --> "ABCDEF"
+//			3 --> "GHIJK"
+//			4 --> "LMNOP"
+//			5 --> "QRSTU"
+//			6 --> "VWXYZ"
+// @return      none
+// *************************************************************************************************
 void CW_Send_Test(u8 set)
 {
     u8 i = 0;
@@ -193,12 +207,18 @@ void CW_Send_Test(u8 set)
     }
     
     do {
-	display_char(LCD_SEG_L2_0, (letter + i), SEG_ON);
+	display_char(LCD_SEG_L2_0, (letter + i), SEG_ON); // Show character currently being sent
 	CW_Send_Char(letter + i);
     } while (++i < set_size);
 }
 
 
+// *************************************************************************************************
+// @fn          sx_cw
+// @brief       Send and cycle through test strings.
+// @param       line	Line number
+// @return      none
+// *************************************************************************************************
 void sx_cw(u8 line)
 {
     CW_Send_Test(CW_Test_Set_Index);
@@ -206,6 +226,13 @@ void sx_cw(u8 line)
 }
 
 
+// *************************************************************************************************
+// @fn          display_cw
+// @brief       Update display
+// @param       line	Line number; this function assumes line 2, regardless of this argument
+//		mode	DISPLAY_LINE_CLEAR or DISPLAY_LINE_UPDATE_FULL
+// @return      none
+// *************************************************************************************************
 void display_cw(u8 line, u8 mode)
 {
     if (mode == DISPLAY_LINE_UPDATE_FULL) display_chars(LCD_SEG_L2_3_2, "CW", SEG_ON);

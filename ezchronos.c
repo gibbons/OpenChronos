@@ -472,11 +472,6 @@ void wakeup_event(void)
 	// Process long button press event (while button is held)
 	else if (button.flag.star_long)
 	{
-		#ifdef CONFIG_CW
-			u8 * alphabet = "N8BBG 73S\0";
-			CW_Send_String(alphabet);
-		#endif
-		
 		 // Clear button event
 		button.flag.star_long = 0;
 
