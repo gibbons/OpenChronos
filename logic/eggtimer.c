@@ -85,8 +85,10 @@ struct eggtimer sEggtimer;
 
 // *************************************************************************************************
 // Extern section
+extern void menu_skip_next(line_t line); // in ezchronos.c
 
 
+// *************************************************************************************************
 void init_eggtimer()
 {
     // Set eggtimer default to 1 minute
@@ -308,7 +310,10 @@ void reset_eggtimer(void)
 	sEggtimer.minutes = sEggtimer.default_minutes;
 	sEggtimer.seconds = sEggtimer.default_seconds;
 	
-	display.flag.update_eggtimer = 1; // gibbons TODO: need this?
+	//display.flag.update_eggtimer = 1; // gibbons TODO: need this?
+	if (sEggtimer.menu_active) {
+		display.flag.line2_full_update = 1; // gibbons TODO: this is hardcoded to line 2; change?
+	}
 }
 
 
