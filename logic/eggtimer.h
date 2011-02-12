@@ -61,16 +61,14 @@
 extern void init_eggtimer(void);
 extern void start_eggtimer(void);
 extern void stop_eggtimer(void);
-extern void reset_eggtimer(void);
-//extern u8 is_eggtimer(void); // gibbons TODO: remove this
-extern void eggtimer_tick(void);
 extern void stop_eggtimer_alarm(void);
-//extern void update_eggtimer_timer(void); // gibbons TODO: remove this
+extern void set_eggtimer_to_defaults(void);
+extern void set_eggtimer(void);
+extern void eggtimer_tick(void);
 extern void mx_eggtimer(u8 line);
 extern void sx_eggtimer(u8 line);
-extern void nx_eggtimer(u8 line);
 extern void display_eggtimer(u8 line, u8 update);
-extern void set_eggtimer(void);
+extern u8 eggtimer_visible(void);
 
 
 // *************************************************************************************************
@@ -88,7 +86,6 @@ struct eggtimer
         //NOTE: u8 means unsigned char
 	u8	state;
 	u8	drawFlag;
-	u8	menu_active; // Flag to determine if the eggtimer's currently active, or running in the background
 	
 	// Values that are decremented each second
 	u8	hours;

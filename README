@@ -1,10 +1,13 @@
 
-Merges my CW branch into my master fork of OpenChronos.
+Some tweaks to the eggtimer.
 
 
 == Changes ==
 
-Merges the CW (Morse code) module into my main ("master") code.  Pretty simple.
+In case you can't tell, I'm still not completely satisfied with my eggtimer code, and
+am again tweaking it a bit: updating documentation, deleting commented-out code,
+making minor adjustments here and there, rearranging the order of the functions, etc.
+
 
 == Status ==
 

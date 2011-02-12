@@ -288,6 +288,7 @@ const struct menu menu_L2_Vario =
 const struct menu menu_L2_Stopwatch =
 {
 	FUNCTION(sx_stopwatch),		// direct function
+	// gibbons TODO: next two lines seem to be in wrong order
 	FUNCTION(menu_skip_next),	// next item function
 	FUNCTION(mx_stopwatch),		// sub menu function
 	FUNCTION(display_stopwatch),// display function
@@ -300,7 +301,7 @@ const struct menu menu_L2_Eggtimer =
 {
         FUNCTION(sx_eggtimer),          // direct function
         FUNCTION(mx_eggtimer),          // sub menu function
-        FUNCTION(nx_eggtimer),	// next item function
+        FUNCTION(menu_skip_next),	// next item function
         FUNCTION(display_eggtimer),	// display function
         FUNCTION(update_eggtimer),      // new display data
 };
