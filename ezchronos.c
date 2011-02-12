@@ -84,6 +84,9 @@
 #ifdef CONFIG_SIDEREAL
 #include "sidereal.h"
 #endif
+#ifdef CONFIG_CW
+#include "cw.h"
+#endif
 
 #ifdef CONFIG_INFOMEM
 #include "infomem.h"

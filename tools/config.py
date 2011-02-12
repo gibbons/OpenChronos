@@ -213,6 +213,12 @@ DATA["CONFIG_TIMECHIME"] = {
         "default": True,
         "help": "Small module to beep once on an hour, noon, midnight, or noon and midnight (12-Hr) transition."
         }
+DATA["CONFIG_CW"] = {
+        "name": "Morse Code",
+        "depends": [],
+        "default": False,
+        "help": "Send morse code over the buzzer."
+        }   
 
 
 

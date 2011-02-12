@@ -1,27 +1,23 @@
 
-Fixes two minor eggtimer bugs.
+Merges my CW branch into my master fork of OpenChronos.
 
 
 == Changes ==
 
-Fixes a bug for the eggtimer display: when the eggtimer times out, it should revert its
-display (if active) back to the value it started at ("default", in the code), such that
-the user knows what time interval just timed out. I've fixed the code so that the hours
-and minutes are reverted, not just the seconds, so this now operates as desired.
-
-I've also added a declaration (extern) for the menu_skip_next(...) function, which is
-used by the eggtimer.  Without this, the function is implicitally declared, which may or
-may not create problems (I hadn't noticed any).
-
+Merges the CW (Morse code) module into my main ("master") code.  Pretty simple.
 
 == Status ==
 
-Time-keeping, alarm, stopwatch, and eggtimer seem to work, though haven't been extensively
-tested.
+Everything should be functional, though there may still be bugs as I haven't tested
+the code tons.
 
 
 == Todo ==
 
+  * Calculate effective WPM transmission rate.
+
+  * Make test code and menu entry optional.
+  
   * Make menu item for configuring time-of-day chime, remove hard-coded beep at noon.
 
   * Make stop_buzzer function aware of which buzzer it's stopping (alarm, eggtimer, etc.)
@@ -40,8 +36,6 @@ tested.
 
   * Re-arrange use of Timer A, now that TIMER0_A0 interrupt is unused
 
-  * Update and/or verify IAR project file (probably just need to add "rtc.c" and "rtc.h"
-    references somewhere)
 
 == Requirements ==
 
