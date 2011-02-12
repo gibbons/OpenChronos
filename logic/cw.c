@@ -34,6 +34,19 @@
 // *************************************************************************************************
 // CW (Morse Code) module routines.
 // *************************************************************************************************
+// 
+// In this code, the word "signal" refers to a single Dot (short) or Dash (long). One or more signals
+// make up a "letter" (sometimes refered to as a "character"), which can be a normal letter (A-Z) or
+// a number (0-9). "Words" are strings of letters, separated by the space character (' '), hence
+// transmitting the space character will send a pause of length "Pause between Words".
+// 
+// Lengths:
+// DOT				Defined (in ms) as CW_DOT_LENGTH (in cw.h)
+// DASH				3 * CW_DOT_LENGTH
+// Pause between Signals	1 * CW_DOT_LENGTH
+// Pause between Letters	3 * CW_DOT_LENGTH
+// Pause between Words		7 * CW_DOT_LENGTH
+
 
 // *************************************************************************************************
 // Include section
@@ -57,14 +70,18 @@
 // Global Variable section
 u8 CW_Test_Set_Index = 0;
 
-// Signal patterns for CW numbers and letters
+// Signal patterns for CW Letters
 //
-// The first 5 bits (bits 8-4) encode the signal (1=dash, 0=dot), the last three
-// bits (bits 3-1) encode the number of signals, e.g.:
+// The first 5 bits (bits 7-3) encode the signal (1=dash, 0=dot), the last three
+// bits (bits 2-0) encode the number of signals, e.g.:
 // C = 0xA4 = 10100100
 // 	Signal Data = 10100
 // 	Length= 100 = 4
 // 	Signal = 1010 = Dash Dot Dash Dot
+//
+// This rather compact encoding scheme only allows for letters up to 5 signals long.
+// If anyone is interested, I've also come up with an alternate scheme (still 8 bits
+// per letter) that allows letters up to 7 signals long. -- gibbons
 const u8 CW_Char[] =
 {
   0xFD,	// 0
@@ -112,7 +129,7 @@ extern void idle_loop(void); // in ezchronos.c
 
 // *************************************************************************************************
 // @fn          CW_Send_Char
-// @brief       Send (via the buzzer) an alphanumeric character
+// @brief       Send (via the buzzer) an alphanumeric character ("letter")
 // @param       letter		character to send, in range '0' to '9' or 'A' to 'Z', inclusive
 // @return      none
 // *************************************************************************************************
@@ -145,7 +162,7 @@ void CW_Send_Char(u8 letter)
 	
 	// Wait until finished buzzing
 	while (is_buzzer()) {
-	    idle_loop(); // Go into LPM3
+	    Timer0_A4_Delay(CONV_MS_TO_TICKS(2*CW_DOT_LENGTH)); // Go into LPM3
 	}
     }
     

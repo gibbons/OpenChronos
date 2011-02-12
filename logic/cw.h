@@ -36,6 +36,21 @@
 #ifndef CW_H_
 #define CW_H_
 
+// *************************************************************************************************
+// 
+// In this code, the word "signal" refers to a single Dot (short) or Dash (long). One or more signals
+// make up a "letter" (sometimes refered to as a "character"), which can be a normal letter (A-Z) or
+// a number (0-9). "Words" are strings of letters, separated by the space character (' '), hence
+// transmitting the space character will send a pause of length "Pause between Words".
+// 
+// Lengths:
+// DOT				Defined (in ms) as CW_DOT_LENGTH (in cw.h)
+// DASH				3 * CW_DOT_LENGTH
+// Pause between Signals	1 * CW_DOT_LENGTH
+// Pause between Letters	3 * CW_DOT_LENGTH
+// Pause between Words		7 * CW_DOT_LENGTH
+
+
 
 // Defines Section
 // ******************************************************************************

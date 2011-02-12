@@ -1,22 +1,29 @@
 
-Adds CW module documentation, removes some test code.
+Corrects method of sleeping while transmitting CW and waiting for buzzer to finish,
+updates CW module documentation.
 
 
 == Changes ==
 
-Documents functions in CW module.
+Changes the manner of waiting (in LPM3) for the buzzer to finish a signal from
+idle_loop() (in ezchronos.c), which has no way of waking itself up (aside from the 1-sec
+interrupt, which is why I think the code worked, amazingly enough), to Timer0_A4_Delay(...)
+for a period of 2 times a "Dot" length (the shortest period possible, for an 'e').
 
-Removes some test code I had placed in the long press section for the star (*) button.
+Adds some brief documenation to cw.c and cw.h defining what I mean by "signal","letter",
+and "word", and how long the various signals and pauses are.
 
 
 == Status ==
 
 All of the letters and numbers have been verified! As far as I'm concerned, the core of
 this module is completed.  Anything from here on out will likely just be niceties, such
-as making the test code and/or menu entry optional to reduce codesize.
+as making the test code and/or menu entry optional to reduce codesize, fixing bugs, etc.
 
 
 == Todo ==
+
+  * Calculate effective WPM transmission rate.
 
   * Make test code and menu entry optional.
   
@@ -43,8 +50,6 @@ as making the test code and/or menu entry optional to reduce codesize.
 
   * Re-arrange use of Timer A, now that TIMER0_A0 interrupt is unused
 
-  * Update and/or verify IAR project file (probably just need to add "rtc.c" and "rtc.h"
-    references somewhere)
 
 == Requirements ==
 
