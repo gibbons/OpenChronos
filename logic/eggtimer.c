@@ -218,8 +218,8 @@ extern void set_eggtimer(void){
 		// Idle timeout: exit without saving 
 		if (sys.flag.idle_timeout) break;
 		
-		// M2 (short): save, then exit 
-		if (button.flag.num) 
+		// "*" (short): save, then exit 
+		if (button.flag.star) 
 		{
 			if ((hours == 0) && (minutes == 0) && (seconds == 0)) { //prevent zero time
 				seconds = 1;
