@@ -1,21 +1,34 @@
 
-Some tweaks to the eggtimer.
+Adds "tilt-setting" capabilities.
 
 
 == Changes ==
 
-In case you can't tell, I'm still not completely satisfied with my eggtimer code, and
-am again tweaking it a bit: updating documentation, deleting commented-out code,
-making minor adjustments here and there, rearranging the order of the functions, etc.
+This branch adds the ability to adjust settings (e.g. time, date, eggtimer, etc.) both
+with the normal button interface, as well as by tilting the watch (using the accelerometer).
+This is done by a simple module that slips into the set_value(...) function (in user.c).
+
+Button presses (Up and Down) are simulated by tilting (rotating) the watch up or down. There
+are two tilt-levels: slow and fast. In other words, if you tilt the watch a little, the
+numbers increment (or decrement) slowly.  Tilt a little farther, and the numbers scroll
+faster. To advance to the "next" field ("#" button), tip the watch along the Y-axis and back
+again. (You can use the acceleration module to see which axis is which. This Y-axis tilting
+corresponds to tipping the buttons (either side) to point down, then level again.)
 
 
 == Status ==
 
-Everything should be functional, though there may still be bugs as I haven't tested
-the code tons.
+It works!  The thresholds and "button repeat" periods will probably require some tweaking.
 
 
 == Todo ==
+
+  * Add relative tilt ability: "zero" watch when starting to allow arbitrary starting positions
+    to be the "level" position.
+
+  * Add progressive speed-up when tilting?
+
+  * Fix eggtimer set function: it doesn't seem to use the set_value(...) function quite right.
 
   * Calculate effective WPM transmission rate.
 

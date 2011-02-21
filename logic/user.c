@@ -53,6 +53,7 @@
 #include "clock.h"
 #include "user.h"
 #include "stopwatch.h"
+#include "tiltset.h"
 
 
 // *************************************************************************************************
@@ -130,6 +131,10 @@ void set_value(s32 * value, u8 digits, u8 blanks, s32 limitLow, s32 limitHigh, u
 	sStopwatch.state = STOPWATCH_HIDE;
 	#endif
 	
+#ifdef CONFIG_TILTSET
+	tiltset_start();
+#endif
+	
 	// Init step size and repeat counter
 	sButton.repeats = 0;
 	
@@ -150,6 +155,36 @@ void set_value(s32 * value, u8 digits, u8 blanks, s32 limitLow, s32 limitHigh, u
 
 		// Button STAR (short) button: exit function
 		if (button.flag.star) break;
+		
+#ifdef CONFIG_TILTSET
+		u8 tilt_state = tiltset_get_state();
+		switch (tilt_state) {
+		    case TILTSET_UP_LARGE:
+		    case TILTSET_UP_SMALL:
+			button.flag.up = 1;
+			// Reset inactivity detection
+			sTime.last_activity = INACTIVITY_TIME; // sTime.system_time;
+			break;
+			
+		    case TILTSET_DOWN_LARGE:
+		    case TILTSET_DOWN_SMALL:
+			button.flag.down = 1;
+			// Reset inactivity detection
+			sTime.last_activity = INACTIVITY_TIME; // sTime.system_time;
+			break;
+			
+		    case TILTSET_LEFT_TIP: // Group left tip with right tip for now
+		    case TILTSET_RIGHT_TIP: // Advance to next value
+			button.flag.num = 1;
+			// Reset inactivity detection
+			sTime.last_activity = INACTIVITY_TIME; // sTime.system_time;
+			break;
+			
+		    case TILTSET_LEVEL:
+		    default:
+			; // Nothing to do here
+		}
+#endif
 
 		// NUM button: exit function and goto to next value (if available)
 		if (button.flag.num)
@@ -299,7 +334,11 @@ void set_value(s32 * value, u8 digits, u8 blanks, s32 limitLow, s32 limitHigh, u
 		}
 		
 		// Call idle loop to serve background tasks
+#ifdef CONFIG_TILTSET
+		tiltset_idle_loop(); // Delays appropriate value (based on tilt) to simulate button repeats
+#else
 		idle_loop();
+#endif
 		
 	}
 	
@@ -316,6 +355,10 @@ void set_value(s32 * value, u8 digits, u8 blanks, s32 limitLow, s32 limitHigh, u
 	// Turn off button repeat function
 	button_repeat_off();
 
+#ifdef CONFIG_TILTSET
+	tiltset_stop();
+#endif
+	
 	#ifdef CONFIG_STOP_WATCH
 	// Enable stopwatch display updates again
 	sStopwatch.state = stopwatch_state;

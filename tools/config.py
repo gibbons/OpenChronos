@@ -219,6 +219,12 @@ DATA["CONFIG_CW"] = {
         "default": False,
         "help": "Send morse code over the buzzer."
         }   
+DATA["CONFIG_TILTSET"] = {
+        "name": "Tilt-set",
+        "depends": [],
+        "default": False,
+        "help": "Adjust settings (alarm, eggtimer, date, etc.) by tilting the watch."
+        }
 
 
 
