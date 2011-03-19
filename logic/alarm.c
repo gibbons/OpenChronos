@@ -109,6 +109,24 @@ void set_alarm_time(u8 hour, u8 minute)
     }    
 }
 
+
+void set_alarm_time(u8 day, u8 dow, u8 hour, u8 minute) // gibbons FIXME: Add support for day and dow!!!
+{
+    RTCCTL01 &= ~RTCAIE & ~RTCAIFG; // Disable RTC module alarm before making any changes, just to be safe
+    
+    sAlarm.hour = hour;
+    sAlarm.minute = minute;
+    
+    // Now store the alarm time in the RTC module's registers
+    RTCAHOUR = hour | RTC_AE;
+    RTCAMIN = minute | RTC_AE;
+    
+    if (sAlarm.state != ALARM_DISABLED) { // gibbons TODO: == ALARM_ENABLED ?
+      RTCCTL01 |= RTCAIE; //Re-enable RTC module alarm
+    }    
+}
+
+
 // *************************************************************************************************
 // @fn          check_alarm
 // @brief       Check if current time matches alarm time

@@ -1,18 +1,26 @@
 
-Some tweaks to the eggtimer.
+First stages of development of an alarm queue feature.
+
+
+== Overview ==
+
+The goal of this branch is to create an alarm queue: a list of alarms to execute.
+Each alarm will, ideally, have its own time/date to trigger at, as well as a function
+pointer to the code to execute when the alarm triggers (think cron!), e.g. send a
+Morse code message (see my CW branch, now merged into my master branch), blink the
+backlight, display a custom message, just beep, whatever's desired!
 
 
 == Changes ==
 
-In case you can't tell, I'm still not completely satisfied with my eggtimer code, and
-am again tweaking it a bit: updating documentation, deleting commented-out code,
-making minor adjustments here and there, rearranging the order of the functions, etc.
+Just adds some basic alarm and alarm queue structures.
 
 
 == Status ==
 
-Everything should be functional, though there may still be bugs as I haven't tested
-the code tons.
+Not working or compiling yet (nor is it supposed to).  Still needs changes for
+consistency with the alarm structures.  This is only the beginning stages of my work
+on this feature, so there's still a lot to be done.
 
 
 == Todo ==

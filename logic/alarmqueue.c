@@ -32,54 +32,74 @@
 //	  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // *************************************************************************************************
+// Alarm queue module
+// *************************************************************************************************
+// 
+// Alarm queue notes here
 
 
 // *************************************************************************************************
 // Include section
-#include "alarmqueue.h"
+// system
+#include "project.h"
+
+// driver
+
+// logic
+
 
 // *************************************************************************************************
 // Prototypes section
 
-// internal functions
-extern void reset_alarm(void);
-//extern void check_alarm(void); // gibbons TODO: remove
-extern void set_alarm_time(u8 hour, u8 minute);
-extern void stop_alarm(void);
-
-// menu functions
-extern void sx_alarm(u8 line);
-extern void mx_alarm(u8 line);
-extern void display_alarm(u8 line, u8 update);
-
-
-// *************************************************************************************************
-// Defines section
-
-// Alarm states
-#define ALARM_DISABLED 		(0u)
-#define ALARM_ENABLED 		(1u)
-#define ALARM_ON		(2u)
-
-// Keep alarm for 10 on-off cycles
-#define ALARM_ON_DURATION	(10u)
-
 
 // *************************************************************************************************
 // Global Variable section
-struct aqueue
-{
-	// ALARM_DISABLED, ALARM_ENABLED, ALARM_ON
-	u8 state;
-	// Alarm duration
-	u8 duration;
-
-	alarm_job* NextAlarm;
-	
-};
-extern struct aqueue sAlarmQueue;
 
 
 // *************************************************************************************************
 // Extern section
+//extern void idle_loop(void); // in ezchronos.c
 
+
+// *************************************************************************************************
+// @fn          CW_Send_String
+// @brief       Send (via the buzzer) an alphanumeric, null ('\0') terminated string
+// @param       str	string to send; characters in range '0' to '9' or 'A' to 'Z', inclusive
+//			Must be terminated with a null character!
+// @return      none
+// *************************************************************************************************
+void CW_Send_String(u8 * str)
+{
+    u8 i = 0;
+    while (*(str + i) != '\0') { // Loop over string elements until null character ('\0') found
+	CW_Send_Char(*(str + i));
+	i++;
+    }
+}
+
+
+// *************************************************************************************************
+// @fn          sx_cw
+// @brief       Send and cycle through test strings.
+// @param       line	Line number
+// @return      none
+// *************************************************************************************************
+void sx_cw(u8 line)
+{
+    CW_Send_Test(CW_Test_Set_Index);
+    if (++CW_Test_Set_Index >= 7) CW_Test_Set_Index = 0;
+}
+
+
+// *************************************************************************************************
+// @fn          display_cw
+// @brief       Update display
+// @param       line	Line number; this function assumes line 2, regardless of this argument
+//		mode	DISPLAY_LINE_CLEAR or DISPLAY_LINE_UPDATE_FULL
+// @return      none
+// *************************************************************************************************
+void display_cw(u8 line, u8 mode)
+{
+    if (mode == DISPLAY_LINE_UPDATE_FULL) display_chars(LCD_SEG_L2_3_2, "CW", SEG_ON);
+    else if (mode == DISPLAY_LINE_CLEAR) CW_Test_Set_Index = 0; // Assume we're leaving the CW menu: reset index
+}

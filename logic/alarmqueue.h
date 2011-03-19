@@ -33,53 +33,48 @@
 //
 // *************************************************************************************************
 
+#ifndef ALARMQUEUE_H_
+#define ALARMQUEUE_H_
 
 // *************************************************************************************************
-// Include section
-#include "alarmqueue.h"
-
-// *************************************************************************************************
-// Prototypes section
-
-// internal functions
-extern void reset_alarm(void);
-//extern void check_alarm(void); // gibbons TODO: remove
-extern void set_alarm_time(u8 hour, u8 minute);
-extern void stop_alarm(void);
-
-// menu functions
-extern void sx_alarm(u8 line);
-extern void mx_alarm(u8 line);
-extern void display_alarm(u8 line, u8 update);
+// 
+// Alarm queue notes here
 
 
-// *************************************************************************************************
-// Defines section
 
-// Alarm states
-#define ALARM_DISABLED 		(0u)
-#define ALARM_ENABLED 		(1u)
-#define ALARM_ON		(2u)
+// Defines Section
+// ******************************************************************************
 
-// Keep alarm for 10 on-off cycles
-#define ALARM_ON_DURATION	(10u)
+#define AQ_DOW_EN	(BIT2)
+#define AQ_DAY_EN	(BIT3)
+#define AQ_MONTH_EN	(BIT4)
+#define AQ_YEAR_EN	(BIT5)
+
+#define AQ_REPEAT	(BIT7)
 
 
-// *************************************************************************************************
-// Global Variable section
-struct aqueue
-{
-	// ALARM_DISABLED, ALARM_ENABLED, ALARM_ON
-	u8 state;
-	// Alarm duration
-	u8 duration;
-
-	alarm_job* NextAlarm;
-	
+// Global variable section
+struct alarm_job {
+    u8	minute;
+    u8	hour;
+    u8	day; // For day or day-of-week (dow)
+    u8	month; // NOTE: month and year not natively supported by RTC alarm function
+    u16	year; // gibbons TODO: really need this?
+    
+    u8	config; // Bit field of config values (see defines above)
+    
+    alarm_job* next; // For the linked-list of alarm jobs (sorted chronologically)
 };
-extern struct aqueue sAlarmQueue;
 
 
-// *************************************************************************************************
-// Extern section
+// Prototypes Section
+// ******************************************************************************
+extern void CW_Send_Char(u8 letter);
+extern void CW_Send_String(u8 * word);
 
+extern void sx_cw(u8 line);
+extern void display_cw(u8 line, u8 mode);	
+
+extern const u8 CW_Char[];
+
+#endif
