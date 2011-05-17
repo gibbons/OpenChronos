@@ -1,23 +1,39 @@
 
-Some tweaks to the eggtimer.
+Updates the CW (Morse code) module.
 
 
 == Changes ==
 
-In case you can't tell, I'm still not completely satisfied with my eggtimer code, and
-am again tweaking it a bit: updating documentation, deleting commented-out code,
-making minor adjustments here and there, rearranging the order of the functions, etc.
+This commit has three major changes:
+
+1) The CW (Morse code) list of characters has been expanded from the alphanumerics to
+    the full range of ASCII characters from 39 (apostrophe, "'") to 90 ("Z"). This
+    further simplifies the code, since an ASCII character can be displayed on the LCD
+    or "beeped-out" via the CW module with minimal work. (Before, with only the
+    alphanumerics, the characters between "9" and "A" had to be filtered out, plus the
+    alphabetic characters had a different offset than the numerals.)
+
+2) The scheme for storing the CW characters, while still taking just 8 bits (1 byte)
+    per character, now allows up to 7 signals per character (where 1 signal is a DOT or
+    DASH).
+
+3) Due to the CW characters now covering a continuous block of ASCII characters, the test
+    function code has been greatly simplified.
 
 
 == Status ==
 
-Everything should be functional, though there may still be bugs as I haven't tested
-the code tons.
+The updates appear to work, though I think I may be hearing an additional signal (DASH,
+specifically) before every character.  I'm not sure if this is a bug or some strange
+effect with the buzzer.
+
+Everything else should be functional!
 
 
 == Todo ==
 
-  * Calculate effective WPM transmission rate.
+  * Calculate effective WPM transmission rate, add in macros to CW.H to allow for setting
+    the WPM.
 
   * Make test code and menu entry optional.
   

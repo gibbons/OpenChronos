@@ -70,56 +70,72 @@
 // Global Variable section
 u8 CW_Test_Set_Index = 0;
 
+
 // Signal patterns for CW Letters
 //
-// The first 5 bits (bits 7-3) encode the signal (1=dash, 0=dot), the last three
-// bits (bits 2-0) encode the number of signals, e.g.:
-// C = 0xA4 = 10100100
-// 	Signal Data = 10100
-// 	Length= 100 = 4
-// 	Signal = 1010 = Dash Dot Dash Dot
+// A scheme (8 bits, or 1 byte per character) that allows characters
+// up to 7 signals long. -- gibbons
+// 
+// 0 = DOT, 1 = DASH
+// There's one start bit (1) before the first signal (DOT or DASH)
 //
-// This rather compact encoding scheme only allows for letters up to 5 signals long.
-// If anyone is interested, I've also come up with an alternate scheme (still 8 bits
-// per letter) that allows letters up to 7 signals long. -- gibbons
+// e.g.  C = -.-. = 0x1A = 0001 1010b
+//                            ^ ^__ First DASH
+//                            |____ Start bit
 const u8 CW_Char[] =
 {
-  0xFD,	// 0
-  0x7D,	// 1
-  0x3D,	// 2
-  0x1D,	// 3
-  0x0D,	// 4
-  0x05,	// 5
-  0x85,	// 6
-  0xC5,	// 7
-  0xE5,	// 8
-  0xF5,	// 9
-  0x42,	// A
-  0x84,	// B
-  0xA4,	// C
-  0x83,	// D
-  0x01,	// E
-  0x24,	// F
-  0xC3,	// G
-  0x04,	// H
-  0x02,	// I
-  0x74, // J
-  0xA3,	// K
-  0x44,	// L
-  0xC2,	// M
-  0x82,	// N
-  0xE3,	// O
-  0x64,	// P
-  0xD4,	// Q
-  0x43,	// R
-  0x03,	// S
-  0x81,	// T
-  0x23,	// U
-  0x14,	// V
-  0x63,	// W
-  0x94,	// X
-  0xB4,	// Y
-  0xC4	// Z
+  0x5E,	// ' .----.
+  0x36,	// ( -.--.
+  0x6D,	// ) -.--.-
+  0x19,	// * -..-	(multiplication sign, same as 'x')
+  0x2A,	// + .-.-.
+  0x73,	// , --..--
+  0x61,	// - -....-	(dash or minus sign)
+  0x55,	// . .-.-.-	(period or full stop)
+  0x32,	// / -..-.
+  0x3F,	// 0 -----
+  0x2F,	// 1 .----
+  0x27,	// 2 ..---
+  0x23,	// 3 ...--
+  0x21,	// 4 ....-
+  0x20,	// 5 .....
+  0x30,	// 6 -....
+  0x38,	// 7 --...
+  0x3C,	// 8 ---..
+  0x3E,	// 9 ----.
+  0x78,	// : ---...
+  0x00,	// ; undefined
+  0x00,	// < undefined 
+  0x31,	// = -...-
+  0x00,	// > undefined
+  0x4C,	// ? ..--..
+  0x5A,	// @ .--.-.
+  0x05,	// A .-
+  0x18,	// B -...
+  0x1A,	// C -.-.
+  0x0C,	// D -..
+  0x02,	// E .
+  0x12,	// F ..-.
+  0x0E,	// G --.
+  0x10,	// H ....
+  0x04,	// I ..
+  0x17, // J .---
+  0x0D,	// K -.-
+  0x14,	// L .-..
+  0x07,	// M --
+  0x06,	// N -.
+  0x0F,	// O ---
+  0x16,	// P .--.
+  0x1D,	// Q --.-
+  0x0A,	// R .-.
+  0x08,	// S ...
+  0x03,	// T -
+  0x09,	// U ..-
+  0x11,	// V ...-
+  0x0B,	// W .--
+  0x19,	// X -..-
+  0x1B,	// Y -.--
+  0x1C	// Z --..
 };
 
 // *************************************************************************************************
@@ -130,17 +146,15 @@ extern void idle_loop(void); // in ezchronos.c
 // *************************************************************************************************
 // @fn          CW_Send_Char
 // @brief       Send (via the buzzer) an alphanumeric character ("letter")
-// @param       letter		character to send, in range '0' to '9' or 'A' to 'Z', inclusive
+// @param       letter		character to send, in range 39 (''') to 90 ('Z'), inclusive
 // @return      none
 // *************************************************************************************************
 void CW_Send_Char(u8 letter)
 {
-    u8 data_mask = 0x80; // Signal data mask
-    if ((letter >= '0') && (letter <= '9')) { // Number
-	letter = CW_Char[letter - '0']; // Get first "letter"
-    }
-    else if ((letter >= 'A') && (letter <= 'Z')) { // Alphabetic Letter
-	letter = CW_Char[letter - 'A' + 10]; // +10 to offset over the number section
+    
+    if ((letter >= 39) && (letter <= 90)) { // In range
+	letter = CW_Char[letter - 39]; // Get first "letter"
+	//gibbons TODO: check if '=' operator or memcpy(...) is more appropriate
     }
     else if (letter == ' ') { // Send space (inter-word pause)
 	Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_WORD_PAUSE * CW_DOT_LENGTH));
@@ -150,15 +164,16 @@ void CW_Send_Char(u8 letter)
 	return;
     }
     
-    // letter in the next loop doubles as both the loop counter and the signal data
-    while (letter-- & CW_LENGTH_MASK) {
-	if (letter & data_mask) { // Send dash (and pause after it)
+    int i = 0x80; // 0x80 = 1000 0000b
+    while (i > letter) i >>= 1;
+    while (i > 0) {
+	if (i & letter) { // Send dash (and pause after it)
 	    start_buzzer(1, CONV_MS_TO_TICKS(3*CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
 	}
 	else { // Send dot (and pause after it)
 	    start_buzzer(1, CONV_MS_TO_TICKS(CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
 	}
-	data_mask >>= 1; // Next loop iteration will send the bit to the right
+	i >>= 1; // Next loop iteration will send the bit to the right
 	
 	// Wait until finished buzzing
 	while (is_buzzer()) {
@@ -173,8 +188,8 @@ void CW_Send_Char(u8 letter)
 
 // *************************************************************************************************
 // @fn          CW_Send_String
-// @brief       Send (via the buzzer) an alphanumeric, null ('\0') terminated string
-// @param       str	string to send; characters in range '0' to '9' or 'A' to 'Z', inclusive
+// @brief       Send (via the buzzer) a null ('\0') terminated string
+// @param       str	string to send; characters in range 39 (''') to 90 ('Z'), inclusive
 //			Must be terminated with a null character!
 // @return      none
 // *************************************************************************************************
@@ -190,43 +205,22 @@ void CW_Send_String(u8 * str)
 
 // *************************************************************************************************
 // @fn          CW_Send_Test
-// @brief       Send (via the buzzer) an alphanumeric test string; character being sent is shown on
-//			line 2, segment 0
-// @param       set	Set number between 0 and 6, inclusive.
-//			0 --> "01234"
-//			1 --> "56789"
-//			2 --> "ABCDEF"
-//			3 --> "GHIJK"
-//			4 --> "LMNOP"
-//			5 --> "QRSTU"
-//			6 --> "VWXYZ"
+// @brief       Send (via the buzzer) a 4 character test string;
+//			character being sent is shown on line 2, segment 0
+// @param       set	Set number between 0 and 12, inclusive.
 // @return      none
 // *************************************************************************************************
 void CW_Send_Test(u8 set)
 {
-    u8 i = 0;
-    u8 letter;
-    u8 set_size = 5;
-    if (set >= 7) set = 6; // Bounds check
+    u8 i, letter;
+    if (set > 12) set = 12; // Bounds check
 
-    letter = set * 5;
-    if (letter > 9) { // alphabetic letter
-	letter += 'A' - 10;
-	if (set == 2) {
-	    set_size++; //Set 2 == "ABCDEF" (six letters, instead of normal five)
-	}
-	else {
-	    letter++; // To account for shift due to set 2 having six letters
-	}
-    }
-    else { // numeric "letter"
-	letter += '0';
-    }
-    
-    do {
+    letter = set * 4 + 39; // gibbons TODO: more efficient to write letter = set << 2; ?
+
+    for (i = 0; i < 4; i++) {
 	display_char(LCD_SEG_L2_0, (letter + i), SEG_ON); // Show character currently being sent
 	CW_Send_Char(letter + i);
-    } while (++i < set_size);
+    };
 }
 
 
@@ -239,7 +233,7 @@ void CW_Send_Test(u8 set)
 void sx_cw(u8 line)
 {
     CW_Send_Test(CW_Test_Set_Index);
-    if (++CW_Test_Set_Index >= 7) CW_Test_Set_Index = 0;
+    if (++CW_Test_Set_Index > 12) CW_Test_Set_Index = 0;
 }
 
 
