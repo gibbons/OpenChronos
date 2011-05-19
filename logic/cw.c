@@ -164,8 +164,9 @@ void CW_Send_Char(u8 letter)
 	return;
     }
     
-    int i = 0x80; // 0x80 = 1000 0000b
-    while (i > letter) i >>= 1;
+    int i = 0x80; // Mask bit, starting at 0x80 = 1000 0000b
+    while (i > letter) i >>= 1; // Find start bit
+    i >>= 1; // Needed to skip over start bit, otherwise all letters start with an extra DASH!
     while (i > 0) {
 	if (i & letter) { // Send dash (and pause after it)
 	    start_buzzer(1, CONV_MS_TO_TICKS(3*CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
@@ -173,7 +174,7 @@ void CW_Send_Char(u8 letter)
 	else { // Send dot (and pause after it)
 	    start_buzzer(1, CONV_MS_TO_TICKS(CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
 	}
-	i >>= 1; // Next loop iteration will send the bit to the right
+	i >>= 1; // Move mask bit to the right one
 	
 	// Wait until finished buzzing
 	while (is_buzzer()) {

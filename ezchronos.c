@@ -321,9 +321,9 @@ void init_application(void)
 	ps_init();
 	
 	// ---------------------------------------------------------------------
-	// Init Time of Day chime (currently hardcoded for a beep at noon)
+	// Init Time of Day chime (currently hardcoded for a beep or CW message ("NOON") at noon)
 #ifdef CONFIG_TIMECHIME
-	rtc_enable_tev(RTCTEV__1200);
+	rtc_enable_tev(RTCTEV__0000); //gibbons FIXME: TI header file has 0000 (midnight) and 1200 (noon) reversed!
 #endif
 }
 

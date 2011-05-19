@@ -93,6 +93,10 @@
 #include "strength.h"
 #endif
 
+#ifdef CONFIG_CW
+#include "cw.h"
+#endif
+
 // *************************************************************************************************
 // Prototypes section
 //gibbons TODO: update prototypes
@@ -212,6 +216,11 @@ __interrupt void RTC_A_ISR(void)
 	
 	static u8 button_lock_counter = 0; //gibbons TODO: need to put these just in the 1-sec interrupt section?
 	static u8 button_beep_counter = 0;
+	
+#ifdef CONFIG_CW
+	u8 CW_Message[] = "NOON\0";
+#endif
+	
 	switch (RTCIV) {
 		case RTC_RT0PSIFG: // Interval timer (16384Hz - 128Hz interrupts (binary powers) )
 			// gibbons TODO: put stopwatch 1/100 sec interrupt here?
@@ -478,7 +487,11 @@ __interrupt void RTC_A_ISR(void)
 		case RTC_RTCTEVIFG: // Interval alarm event (min or hour changed, or rollover to midnight or noon) (choose one)
 			// Minute, hour, noon, or midnight rollover beep (same beep as button press, at least for now)
 #ifdef CONFIG_TIMECHIME
+#ifdef CONFIG_CW
+			CW_Send_String(CW_Message);
+#else
 			start_buzzer(1, CONV_MS_TO_TICKS(20), CONV_MS_TO_TICKS(150));
+#endif
 			if (RTC_Toggle_12Hr) RTCCTL01 ^= 0x0100; // Toggle Time EVent between noon and midnight
 #endif
 			break;

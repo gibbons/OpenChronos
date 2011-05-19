@@ -1,33 +1,24 @@
 
-Updates the CW (Morse code) module.
+Fixes a bug in the CW (Morse code) module, adds ability to send "NOON" (in CW) at 12:00pm.
 
 
 == Changes ==
 
-This commit has three major changes:
+This commit fixes a previously noted bug, where all the CW characters were prefixed by
+a DASH signal.  I was accidentally treating my start bit as part of the character's
+signal set.
 
-1) The CW (Morse code) list of characters has been expanded from the alphanumerics to
-    the full range of ASCII characters from 39 (apostrophe, "'") to 90 ("Z"). This
-    further simplifies the code, since an ASCII character can be displayed on the LCD
-    or "beeped-out" via the CW module with minimal work. (Before, with only the
-    alphanumerics, the characters between "9" and "A" had to be filtered out, plus the
-    alphabetic characters had a different offset than the numerals.)
-
-2) The scheme for storing the CW characters, while still taking just 8 bits (1 byte)
-    per character, now allows up to 7 signals per character (where 1 signal is a DOT or
-    DASH).
-
-3) Due to the CW characters now covering a continuous block of ASCII characters, the test
-    function code has been greatly simplified.
+I've also changed the "Time of Day Chime" to support beeping out "NOON" in Morse code
+when it occurs (if CW is enabled) -- this is mainly for my own amusement, since I only use
+this functionality to indicate noon and never midnight. For what it's worth, the values in
+the TI header file for the different types of Time EVents have the values for noon
+(RTCTEV_1200) and midnight (RTCTEV__0000) swapped, hence why I appear to be setting a
+midnight-only event in ezchronos.c (line 326).
 
 
 == Status ==
 
-The updates appear to work, though I think I may be hearing an additional signal (DASH,
-specifically) before every character.  I'm not sure if this is a bug or some strange
-effect with the buzzer.
-
-Everything else should be functional!
+Everything should be functional!  Now I just need to learn Morse code...
 
 
 == Todo ==
@@ -35,9 +26,16 @@ Everything else should be functional!
   * Calculate effective WPM transmission rate, add in macros to CW.H to allow for setting
     the WPM.
 
-  * Make test code and menu entry optional.
+  * Make CW test code and menu entry optional.
+
+  * Make sending of CW more display-friendly: all updates are paused until the whole
+    message is sent. Perhaps use a different method (or different timer) for creating
+    proper time intervals?
   
   * Make menu item for configuring time-of-day chime, remove hard-coded beep at noon.
+
+  * Add ability to enter custom CW messages by monitoring physical taps on watch via the
+    accelerometer?  (Perhaps a bit too grandiose!)
 
   * Make stop_buzzer function aware of which buzzer it's stopping (alarm, eggtimer, etc.)
 
@@ -47,7 +45,7 @@ Everything else should be functional!
 
   * Combine sync and rfbsl menus (just an idea)
 
-  * Tidy up menu code for battery and rfbsl when using hidden rfbsl option. (Should probably
+  * Tidy up menu code for battery and rfbsl when using hidden refusal option. (Should probably
     merge their display functions for this mode, rather than use the display_discret_rfbsl
     hack.)
 
