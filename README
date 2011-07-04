@@ -1,19 +1,14 @@
 
-Fixes a bug in the CW (Morse code) module, adds ability to send "NOON" (in CW) at 12:00pm.
+Fixes a small display bug in the CW (Morse code) module.
 
 
 == Changes ==
 
-This commit fixes a previously noted bug, where all the CW characters were prefixed by
-a DASH signal.  I was accidentally treating my start bit as part of the character's
-signal set.
-
-I've also changed the "Time of Day Chime" to support beeping out "NOON" in Morse code
-when it occurs (if CW is enabled) -- this is mainly for my own amusement, since I only use
-this functionality to indicate noon and never midnight. For what it's worth, the values in
-the TI header file for the different types of Time EVents have the values for noon
-(RTCTEV_1200) and midnight (RTCTEV__0000) swapped, hence why I appear to be setting a
-midnight-only event in ezchronos.c (line 326).
+This commit merely sets the display.flag.update_full flag whenever a Morse code character
+is sent, thereby ensuring that the display will be correct afterwards. Before this update,
+whenever the noontime message ("NOON") would go off, the display wouldn't get updated,
+leaving the hour at 11AM until the next hour change (12:59pm -> 1:00pm) or a display change
+(displaying seconds, for instance).
 
 
 == Status ==

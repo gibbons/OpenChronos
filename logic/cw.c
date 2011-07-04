@@ -153,37 +153,40 @@ void CW_Send_Char(u8 letter)
 {
     
     if ((letter >= 39) && (letter <= 90)) { // In range
-	letter = CW_Char[letter - 39]; // Get first "letter"
-	//gibbons TODO: check if '=' operator or memcpy(...) is more appropriate
+		letter = CW_Char[letter - 39]; // Get first "letter"
+		//gibbons TODO: check if '=' operator or memcpy(...) is more appropriate
     }
     else if (letter == ' ') { // Send space (inter-word pause)
-	Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_WORD_PAUSE * CW_DOT_LENGTH));
-	return;
+		Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_WORD_PAUSE * CW_DOT_LENGTH));
+		return;
     }
     else { // Invalid character
-	return;
+		return;
     }
     
     int i = 0x80; // Mask bit, starting at 0x80 = 1000 0000b
     while (i > letter) i >>= 1; // Find start bit
     i >>= 1; // Needed to skip over start bit, otherwise all letters start with an extra DASH!
     while (i > 0) {
-	if (i & letter) { // Send dash (and pause after it)
-	    start_buzzer(1, CONV_MS_TO_TICKS(3*CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
-	}
-	else { // Send dot (and pause after it)
-	    start_buzzer(1, CONV_MS_TO_TICKS(CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
-	}
-	i >>= 1; // Move mask bit to the right one
-	
-	// Wait until finished buzzing
-	while (is_buzzer()) {
-	    Timer0_A4_Delay(CONV_MS_TO_TICKS(2*CW_DOT_LENGTH)); // Go into LPM3
-	}
+		if (i & letter) { // Send dash (and pause after it)
+			start_buzzer(1, CONV_MS_TO_TICKS(3*CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
+		}
+		else { // Send dot (and pause after it)
+			start_buzzer(1, CONV_MS_TO_TICKS(CW_DOT_LENGTH), CONV_MS_TO_TICKS(CW_SIGNAL_PAUSE * CW_DOT_LENGTH));
+		}
+		i >>= 1; // Move mask bit to the right one
+		
+		// Wait until finished buzzing
+		while (is_buzzer()) {
+			Timer0_A4_Delay(CONV_MS_TO_TICKS(2*CW_DOT_LENGTH)); // Go into LPM3
+		}
     }
     
     // Now send inter-letter pause (space between successive letters)
     Timer0_A4_Delay(CONV_MS_TO_TICKS(CW_LETTER_PAUSE * CW_DOT_LENGTH));
+	
+	// Clean up display
+	display.flag.full_update = 1;
 }
 
 
@@ -198,9 +201,9 @@ void CW_Send_String(u8 * str)
 {
     u8 i = 0;
     while (*(str + i) != '\0') { // Loop over string elements until null character ('\0') found
-	CW_Send_Char(*(str + i));
-	i++;
-    }
+		CW_Send_Char(*(str + i));
+		i++;
+	}
 }
 
 
@@ -219,9 +222,9 @@ void CW_Send_Test(u8 set)
     letter = set * 4 + 39; // gibbons TODO: more efficient to write letter = set << 2; ?
 
     for (i = 0; i < 4; i++) {
-	display_char(LCD_SEG_L2_0, (letter + i), SEG_ON); // Show character currently being sent
-	CW_Send_Char(letter + i);
-    };
+		display_char(LCD_SEG_L2_0, (letter + i), SEG_ON); // Show character currently being sent
+		CW_Send_Char(letter + i);
+    }
 }
 
 
